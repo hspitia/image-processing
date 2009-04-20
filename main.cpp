@@ -5,6 +5,7 @@
 #include "Image.h"
 #include "Segmentation.h"
 #include "LowPassFilters.h"
+#include "SobelFilter.h"
 
 double gauss(int x, int y);
 
@@ -62,9 +63,9 @@ int main( int argc, char * argv[] )
 	
 	// Filtros paso bajo
 	// Filtro media
-	Image * imagen = new Image(argv[1]);
-	Image imgFilterd = LowPassFilters::mean(imagen);
-	imgFilterd.save("data/06_MeanFiltered.pgm");
+	// Image * imagen = new Image(argv[1]);
+	// Image imgFilterd = LowPassFilters::mean(imagen);
+	// imgFilterd.save("data/06_MeanFiltered.pgm");
 
 	// Matrix<double> mask = LowPassFilters::createMeanMask(3);
 	// cout<<mask<<endl; 
@@ -80,6 +81,12 @@ int main( int argc, char * argv[] )
 		
 	// 	if (x != 99 || y != 99) cout<<"gauss: "<<gauss(x,y)<<endl;
 	// }
+	
+	SobelFilter sobel = SobelFilter();
+	Image * img = new Image(argv[1]); 
+	Image filtered = sobel.sobel(img,128);
+	
+	filtered.save("data/07_SobelFiltered.pgm");
 	
 	return 0;//status
 }
