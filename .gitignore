@@ -9,3 +9,7 @@
 *.pgm
 # Ignore bat files
 *.bat
+# Ignore makefile files
+Makefile*
+# Ignore pro files
+*.pro
