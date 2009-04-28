@@ -13,3 +13,5 @@
 Makefile*
 # Ignore pro files
 *.pro
+#Ignore matlab files
+*.m

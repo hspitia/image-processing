@@ -86,7 +86,8 @@ Image SobelFilter::sobel(Image * image, const int & threshold){
 		magnitudeY = ConvolutionOperation::convolutionBorder(lowerRowIdx, colIdx, image, *verticalMask);
 		setValues(lowerRowIdx, colIdx, magnitudeX, magnitudeY, imageFiltered, threshold);
 	}
-	
+	Image * nonMaximal = nonMaximalSuppression(image);
+	nonMaximal->save("data/nonMaximal.pgm");
 	return (*imageFiltered);
 }
 
@@ -151,7 +152,9 @@ void SobelFilter::initMatrices(Image * image)
 	int cols = image->getCols();
 	verticalMatrix = new Matrix<double>(rows,cols);
 	horizontalMatrix = new Matrix<double>(rows,cols);
-	gradientMagnitudes = new Matrix<double>(rows,cols);
+	// gradientMagnitudes = new Matrix<double>(rows,cols);
+	// gradientMagnitudes = new Matrix<int>(rows,cols);
+	gradientMagnitudes = new Image(*image);
 	gradientAngles = new Matrix<double>(rows,cols);
 }
 
@@ -173,10 +176,80 @@ void SobelFilter::setValues(	const int & row,
 	
 	horizontalMatrix->setAt(row, col, magnitudeX);
 	verticalMatrix->setAt(row, col, magnitudeY);
-	gradientMagnitudes->setAt(row, col, magnitude);
+	if( magnitude > 255 ) magnitude = 255;
+	if( magnitude < 0 ) magnitude = 0;
+	// gradientMagnitudes->setAt(row, col, magnitude);
+	// gradientMagnitudes->setAt(row, col, (int) aproxNumber(magnitude));
+	gradientMagnitudes->setPixel(row, col, (int) aproxNumber(magnitude));
 	gradientAngles->setAt(row, col, angle);
 	
 	if(magnitude >= threshold) imageFiltered->setPixel(row, col, 255);
 	else imageFiltered->setPixel(row, col, 0);
 	
+}
+
+Image * SobelFilter::nonMaximalSuppression(Image * image)
+{
+	
+	// Image * nonMaximal = new Image(image->getWidth(), image->getHeight(), Image::P2, 255, 0);
+	// Image * nonMaximal = new Image(*image);
+	// nonMaximal->setMatrix(gradientMagnitudes);
+	Image * nonMaximal = new Image(*gradientMagnitudes);
+	
+	
+	int start = 1;
+	int endRow = gradientMagnitudes->getRows() - 1;
+	int endCol = gradientMagnitudes->getCols() - 1;
+	double angle = 0;
+	
+	for(int rowIdx = start; rowIdx < endRow; ++rowIdx){
+		for(int colIdx = start; colIdx < endCol; ++colIdx){
+			angle  = gradientAngles->getAt(rowIdx, colIdx);
+			if(angle == 45 || angle == 225) {
+				if(equalDirection(angle, gradientAngles->getAt(rowIdx-1,colIdx-1), gradientAngles->getAt(rowIdx+1, colIdx+1))){
+					if(	gradientMagnitudes->getPixel(rowIdx, colIdx) < gradientMagnitudes->getPixel(rowIdx+1, colIdx+1) ||
+							gradientMagnitudes->getPixel(rowIdx, colIdx) < gradientMagnitudes->getPixel(rowIdx-1, colIdx-1))
+					{
+						nonMaximal->setPixel(rowIdx, colIdx, 0);
+					}
+				}
+			}
+			else if(angle == 90 || angle == 270) {
+				if(equalDirection(angle, gradientAngles->getAt(rowIdx,colIdx-1), gradientAngles->getAt(rowIdx, colIdx+1))){
+					if(	gradientMagnitudes->getPixel(rowIdx, colIdx) < gradientMagnitudes->getPixel(rowIdx, colIdx-1) &&
+							gradientMagnitudes->getPixel(rowIdx, colIdx) < gradientMagnitudes->getPixel(rowIdx, colIdx+1))
+					{
+						nonMaximal->setPixel(rowIdx, colIdx, 0);
+					}
+				}
+			}
+			else if(angle == 125 || angle == 315) {
+				if(equalDirection(angle, gradientAngles->getAt(rowIdx,colIdx), gradientAngles->getAt(rowIdx, colIdx))){
+					if(	gradientMagnitudes->getPixel(rowIdx, colIdx) < gradientMagnitudes->getPixel(rowIdx-1, colIdx+1) ||
+							gradientMagnitudes->getPixel(rowIdx, colIdx) < gradientMagnitudes->getPixel(rowIdx+1, colIdx-1))
+					{
+						nonMaximal->setPixel(rowIdx, colIdx, 0);
+					}
+				}
+			}
+			else if(angle == 180 || angle == 0) {
+				if(equalDirection(angle, gradientAngles->getAt(rowIdx,colIdx), gradientAngles->getAt(rowIdx, colIdx))){
+					if(	gradientMagnitudes->getPixel(rowIdx, colIdx) < gradientMagnitudes->getPixel(rowIdx-1, colIdx) ||
+							gradientMagnitudes->getPixel(rowIdx, colIdx) < gradientMagnitudes->getPixel(rowIdx+1, colIdx))
+					{
+						nonMaximal->setPixel(rowIdx, colIdx, 0);
+					}
+				}
+			}
+			else {
+				nonMaximal->setPixel(rowIdx, colIdx, 0);
+			}
+		}
+	}
+	return nonMaximal;
+}
+
+bool SobelFilter::equalDirection(const double & dir1, const double & dir2, const double & dir3){
+	if(dir1 == dir2 && dir1 == dir3) return true;
+	return false;
 }

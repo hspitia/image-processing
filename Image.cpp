@@ -349,3 +349,7 @@ Matrix<int> * Image::getMatrix()
 {
 	return matrix;
 }
+
+void Image::setMatrix(Matrix<int> * matrix){
+	this->matrix = new Matrix<int> (*matrix);
+}

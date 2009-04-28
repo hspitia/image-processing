@@ -6,6 +6,7 @@
 #include "Image.h"
 #include "ConvolutionOperation.h"
 #include "utils/Matrix.h"
+#include "utils/utils.h"    
 
 using namespace std;
 
@@ -16,7 +17,8 @@ class SobelFilter {
 		
 		Matrix<double> * verticalMatrix;
 		Matrix<double> * horizontalMatrix;
-		Matrix<double> * gradientMagnitudes;
+		// Matrix<double> * gradientMagnitudes;
+		Image * gradientMagnitudes;
 		Matrix<double> * gradientAngles;
 		
 		void createMasks();
@@ -28,6 +30,9 @@ class SobelFilter {
 										const double & magnitudeY,
 										Image * imageFiltered,
 										const int & threshold);
+		
+		Image * nonMaximalSuppression(Image * image);
+		bool equalDirection(const double & dir1, const double & dir2, const double & dir3);
 		
 	public:
 		SobelFilter();

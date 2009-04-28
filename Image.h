@@ -48,6 +48,7 @@ class Image
 		virtual QVector<int> & getLut();
 		virtual void setLut(const QVector<int> & lut);
 		virtual Matrix<int> * getMatrix();
+		void setMatrix(Matrix<int> * matrix);
 		
 		
 	private:
