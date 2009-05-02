@@ -21,10 +21,10 @@ class Image
 		Image(const Image & imageObject);
 		Image(const QString & fileName);
 		Image(	const int & width,
-						const int & height,
-						format_t format,
-						const int & maxLevel,
-						const int & backgroundLevel);
+					const int & height,
+					format_t format,
+					const int & maxLevel,
+					const int & backgroundLevel);
 		
 		virtual ~Image();
 		

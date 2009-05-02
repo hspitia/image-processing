@@ -31,7 +31,7 @@ class Matrix
 			if(matrix != NULL){
 				for(int i = 0; i < rows; i++ ){
 					for(int j = 0; j < cols; j++ ){
-						outStream<<setw(4)<<matrix[i][j]<<" ";
+						outStream<<setw(5)<<matrix[i][j]<<" ";
 					}
 					outStream<<endl;
 				}

@@ -15,3 +15,8 @@ Makefile*
 *.pro
 #Ignore matlab files
 *.m
+#Ignore text files
+*.txt
+#Ignore png image files
+*.PNG
+

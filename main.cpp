@@ -84,7 +84,7 @@ int main( int argc, char * argv[] )
 	
 	SobelFilter sobel = SobelFilter();
 	Image * img = new Image(argv[1]); 
-	Image filtered = sobel.sobel(img,128);
+	Image filtered = sobel.sobel(img,80);
 	
 	filtered.save("data/07_SobelFiltered.pgm");
 	

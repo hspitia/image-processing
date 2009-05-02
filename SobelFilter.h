@@ -17,22 +17,25 @@ class SobelFilter {
 		
 		Matrix<double> * verticalMatrix;
 		Matrix<double> * horizontalMatrix;
-		// Matrix<double> * gradientMagnitudes;
-		Image * gradientMagnitudes;
-		Matrix<double> * gradientAngles;
+		Matrix<int> * gradientMagnitudes;
+		Matrix<int> * gradientAngles;
+		Matrix<int> * nonMaximalMagnitudes;
+		Matrix<int> * nonMaximalAngles;
 		
 		void createMasks();
 		void initMatrices(Image * image);
-		double classifyAngle(double angle);
+		int quantizeAngle(double angle);
 		void setValues(	const int & row, 
 										const int & col,
 										const double & magnitudeX,
 										const double & magnitudeY,
 										Image * imageFiltered,
+										Image * colorImgFiltered,
 										const int & threshold);
 		
-		Image * nonMaximalSuppression(Image * image);
-		bool equalDirection(const double & dir1, const double & dir2, const double & dir3);
+		void nonMaximalSuppression(const int & sideNeighbors);
+		// bool equalDirection(const double & dir1, const double & dir2, const double & dir3);
+		void nonMaximalSuppressionOperation(const int & row, const int & col, const int & sideNeighbors);
 		
 	public:
 		SobelFilter();
