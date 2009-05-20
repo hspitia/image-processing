@@ -11,7 +11,12 @@
 using namespace std;
 
 class SobelFilter {
+	public:
+		enum process_stage_t {SOBEL, NON_MAXIMAL, HYSTERESIS};
+		
 	private:
+		int borderColor;
+		int backgroundColor;
 		Matrix<double> * verticalMask;
 		Matrix<double> * horizontalMask;
 		
@@ -21,6 +26,11 @@ class SobelFilter {
 		Matrix<int> * gradientAngles;
 		Matrix<int> * nonMaximalMagnitudes;
 		Matrix<int> * nonMaximalAngles;
+		Matrix<int> * hysteresisMagnitudes;
+		
+		Image * sobelImage;
+		Image * nonMaximalImage;
+		Image * hysteresisImage;
 		
 		void createMasks();
 		void initMatrices(Image * image);
@@ -29,24 +39,45 @@ class SobelFilter {
 										const int & col,
 										const double & magnitudeX,
 										const double & magnitudeY,
-										Image * imageFiltered,
-										Image * colorImgFiltered,
 										const int & threshold);
 		
 		void nonMaximalSuppression(const int & sideNeighbors);
-		// bool equalDirection(const double & dir1, const double & dir2, const double & dir3);
-		void nonMaximalSuppressionOperation(const int & row, const int & col, const int & sideNeighbors);
+		bool nonMaximalSuppressionOperation(const int & row, const int & col, const int & sideNeighbors);
+		Image * constructColorImage(Image * originImage);
+		void hysteresis(const int & lowThreshold, const int & highThreshold);
+		
 		
 	public:
-		SobelFilter();
+		SobelFilter(const int & borderColor = 255, const int & backgroundColor = 0);
 		virtual ~SobelFilter();
 		
 		Image sobel(Image * image, const int & threshold);
 		
+		Matrix<double> * getVerticalMask();
+		void setVerticalMask(Matrix<double> * verticalMaskValue);
+		Matrix<double> * getHorizontalMask();
+		void setHorizontalMask(Matrix<double> * horizontalMaskValue);
+		Matrix<double> * getVerticalMatrix();
+		void setVerticalMatrix(Matrix<double> * verticalMatrixValue);
+		Matrix<double> * getHorizontalMatrix();
+		void setHorizontalMatrix(Matrix<double> * horizontalMatrixValue);
+		Matrix<int> * getGradientMagnitudes();
+		void setGradientMagnitudes(Matrix<int> * gradientMagnitudesValue);
+		Matrix<int> * getGradientAngles();
+		void setGradientAngles(Matrix<int> * gradientAnglesValue);
+		Matrix<int> * getNonMaximalMagnitudes();
+		void setNonMaximalMagnitudes(Matrix<int> * nonMaximalMagnitudesValue);
+		Matrix<int> * getNonMaximalAngles();
+		void setNonMaximalAngles(Matrix<int> * nonMaximalAnglesValue);
 		
+		Image * getSobelImage();
+		Image * getNonMaximalImage();
+		Image * getHysteresisImage();
 		
-		
-		
+		Image * createAnglesColorImage(process_stage_t processStageForImage);
 };
 #endif        //  #ifndef SOBELFILTER_H
+
+
+
 

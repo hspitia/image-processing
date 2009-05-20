@@ -1,17 +1,27 @@
 #include "SobelFilter.h"
 
-SobelFilter::SobelFilter(){
+SobelFilter::SobelFilter(const int & borderColor, const int & backgroundColor){
 	// createMasks();
+	this->borderColor = borderColor;
+	this->backgroundColor = backgroundColor;
+	
 	verticalMask = NULL;
 	horizontalMask = NULL;
 	
 	verticalMatrix = NULL;
 	horizontalMatrix = NULL;
+	
 	gradientMagnitudes = NULL;
 	gradientAngles = NULL;
 	nonMaximalMagnitudes = NULL;
 	nonMaximalAngles = NULL;
+	hysteresisMagnitudes = NULL;
+	
+	sobelImage = NULL;
+	nonMaximalImage = NULL;
+	hysteresisImage = NULL;
 }
+
 
 SobelFilter::~SobelFilter(){
 	
@@ -32,12 +42,30 @@ SobelFilter::~SobelFilter(){
 	
 	if(gradientAngles != NULL) delete gradientAngles;
 	gradientAngles = NULL;
+	
+	if(nonMaximalMagnitudes != NULL) delete nonMaximalMagnitudes;
+	nonMaximalMagnitudes = NULL;
+	
+	if(nonMaximalAngles != NULL) delete nonMaximalAngles;
+	nonMaximalAngles = NULL;
+	
+	if(hysteresisMagnitudes != NULL) delete hysteresisMagnitudes;
+	hysteresisMagnitudes = NULL;
+	
+	
+	if(sobelImage != NULL) delete sobelImage;
+	sobelImage = NULL;
+	
+	if(nonMaximalImage != NULL) delete nonMaximalImage;
+	nonMaximalImage = NULL;
+	
+	if(hysteresisImage != NULL) delete hysteresisImage;
+	hysteresisImage = NULL;
 }
 
 Image SobelFilter::sobel(Image * image, const int & threshold){
 	
-	Image * imageFiltered = new Image(*image);
-	Image * colorImgFiltered = new Image(image->getWidth(), image->getHeight(), Image::P3, 255, 0);
+	sobelImage = new Image(*image);
 	createMasks();
 	initMatrices(image);
 	
@@ -52,10 +80,10 @@ Image SobelFilter::sobel(Image * image, const int & threshold){
 		for(int colIdx = 1; colIdx < endCol; ++colIdx){
 			magnitudeX = ConvolutionOperation::convolutionCenter(rowIdx, colIdx, image, *horizontalMask);
 			magnitudeY = ConvolutionOperation::convolutionCenter(rowIdx, colIdx, image, *verticalMask);
-			setValues(rowIdx, colIdx, magnitudeX, magnitudeY, imageFiltered, colorImgFiltered, threshold);
+			// cout << "DEBUG " <<rowIdx<<", "<<colIdx<< endl;
+			setValues(rowIdx, colIdx, magnitudeX, magnitudeY, threshold);
 		}
 	}
-	
 	
 	// Convolution for columns out borders (left and right)
 	int rightColIdx = endCol;
@@ -64,14 +92,13 @@ Image SobelFilter::sobel(Image * image, const int & threshold){
 		// Upper row
 		magnitudeX = ConvolutionOperation::convolutionBorder(rowIdx, colIdx, image, *horizontalMask);
 		magnitudeY = ConvolutionOperation::convolutionBorder(rowIdx, colIdx, image, *verticalMask);
-		setValues(rowIdx, colIdx, magnitudeX, magnitudeY, imageFiltered, colorImgFiltered, threshold);
+		setValues(rowIdx, colIdx, magnitudeX, magnitudeY, threshold);
 		
 		// Lower row
 		magnitudeX = ConvolutionOperation::convolutionBorder(rowIdx, rightColIdx, image, *horizontalMask);
 		magnitudeY = ConvolutionOperation::convolutionBorder(rowIdx, rightColIdx, image, *verticalMask);
-		setValues(rowIdx, rightColIdx, magnitudeX, magnitudeY, imageFiltered, colorImgFiltered, threshold);
+		setValues(rowIdx, rightColIdx, magnitudeX, magnitudeY, threshold);
 	}
-	
 	
 	// Convolution for rows out borders (up and bottom)
 	endCol++;
@@ -82,60 +109,16 @@ Image SobelFilter::sobel(Image * image, const int & threshold){
 		// Upper row
 		magnitudeX = ConvolutionOperation::convolutionBorder(rowIdx, colIdx, image, *horizontalMask);
 		magnitudeY = ConvolutionOperation::convolutionBorder(rowIdx, colIdx, image, *verticalMask);
-		setValues(rowIdx, colIdx, magnitudeX, magnitudeY, imageFiltered, colorImgFiltered, threshold);
+		setValues(rowIdx, colIdx, magnitudeX, magnitudeY, threshold);
 		
 		// Lower row
 		magnitudeX = ConvolutionOperation::convolutionBorder(lowerRowIdx, colIdx, image, *horizontalMask);
 		magnitudeY = ConvolutionOperation::convolutionBorder(lowerRowIdx, colIdx, image, *verticalMask);
-		setValues(lowerRowIdx, colIdx, magnitudeX, magnitudeY, imageFiltered, colorImgFiltered, threshold);
+		setValues(lowerRowIdx, colIdx, magnitudeX, magnitudeY, threshold);
 	}
 	nonMaximalSuppression(2);
 	
-	// Test
-	
-	int nonMaximalAngle = 0;
-	// Image * imgSuppressed = new Image(*image);
-	Image * imgSuppressed = new Image(image->getWidth(), image->getHeight(), Image::P3, 255, 0);
-	for(int row = 0; row < nonMaximalMagnitudes->getRows(); ++row){
-		for(int col = 0; col < nonMaximalMagnitudes->getCols(); ++col){
-			if( nonMaximalMagnitudes->getAt(row,col) >= threshold) {
-				// imgSuppressed->setPixel(row, col, 255);
-				
-				nonMaximalAngle = gradientAngles->getAt(row,col);
-				
-				if( nonMaximalAngle == 135 || nonMaximalAngle == 315 ) {
-					imgSuppressed->setPixel(row,col,0,255,0);		//Green
-				}
-				else if( nonMaximalAngle == 180 || nonMaximalAngle == 360 ){
-					imgSuppressed->setPixel(row,col,0,0,255);		//Blue
-				}
-				else if( nonMaximalAngle == 45 || nonMaximalAngle == 225 ){
-					imgSuppressed->setPixel(row,col,255,0,0);		//Red
-				}
-				else if( nonMaximalAngle == 90 || nonMaximalAngle == 270 ){
-					imgSuppressed->setPixel(row,col,255,255,0);	//Yellow
-				}
-				
-			}
-			// else imgSuppressed->setPixel(row, col, 0);
-			
-			
-		}
-	}
-	imgSuppressed->save("data/nonMaximal.ppm");
-	// imgSuppressed->save("data/nonMaximal.pgm");
-	colorImgFiltered->save("data/colorSobelFiltered.ppm");
-	
-	/*
-	cout<<"Horizontal Mask"<<endl<<horizontalMask<<endl<<endl;
-	cout<<"Vertical Mask"<<endl<<verticalMask<<endl<<endl;
-	cout<<"IMAGEN"<<endl<<(image->getMatrix())<<endl<<endl;
-	cout<<"ANGULOS"<<endl<<gradientAngles<<endl<<endl;
-	cout<<"MAGNITUDES"<<endl<<gradientMagnitudes<<endl<<endl;
-	cout<<"VERTICAL"<<endl<<verticalMatrix<<endl<<endl;
-	cout<<"HORIZONTAL"<<endl<<horizontalMatrix<<endl<<endl;
-	*/
-	return (*imageFiltered);
+	return (*sobelImage);
 }
 
 void SobelFilter::createMasks(){
@@ -163,8 +146,7 @@ void SobelFilter::createMasks(){
 	horizontalMask->setAt(2,2,1);
 }
 
-int SobelFilter::quantizeAngle(double angle)
-{
+int SobelFilter::quantizeAngle(double angle){
 	int quantizedAngle = 0;
 	
 	if(angle <= 0) angle += 360;
@@ -211,14 +193,13 @@ void SobelFilter::setValues(	const int & row,
 														const int & col,
 														const double & magnitudeX,
 														const double & magnitudeY,
-														Image * imageFiltered,
-														Image * colorImgFiltered,
 														const int & threshold)
 {
-	double magnitude = 0.0;
+	// double magnitude = 0.0;
+	int magnitude = 0;
 	int angle = 0;
 	
-	magnitude = (double) sqrt((magnitudeX * magnitudeX) + (magnitudeY * magnitudeY));
+	magnitude = (int) sqrt((magnitudeX * magnitudeX) + (magnitudeY * magnitudeY));
 	double angleTmp = 0.0;
 	
 	if (magnitudeX == 0 && magnitudeY == 0) angle = 0; //No change, then No direction
@@ -229,33 +210,22 @@ void SobelFilter::setValues(	const int & row,
 	
 	horizontalMatrix->setAt(row, col, magnitudeX);
 	verticalMatrix->setAt(row, col, magnitudeY);
-	gradientMagnitudes->setAt(row, col, (int) magnitude);
+	// gradientMagnitudes->setAt(row, col, (int) magnitude);
+	gradientMagnitudes->setAt(row, col, magnitude);
 	gradientAngles->setAt(row, col, angle);
 	
 	if(magnitude >= threshold) {
-		imageFiltered->setPixel(row, col, 255);
-		
-		if( angle == 135 || angle == 315 ) {
-			colorImgFiltered->setPixel(row,col,0,255,0);		//Green
-		}
-		else if( angle == 180 || angle == 360 ){
-			colorImgFiltered->setPixel(row,col,0,0,255);		//Blue
-		}
-		else if( angle == 45 || angle == 225 ){
-			colorImgFiltered->setPixel(row,col,255,0,0);		//Red
-		}
-		else if( angle == 90 || angle == 270 ){
-			colorImgFiltered->setPixel(row,col,255,255,0);	//Yellow
-		}
+		// cout << "DEBUG - dentro setValues" << endl<<"magnitude "<<magnitude<<", threshold "<<threshold<<endl;
+		sobelImage->setPixel(row, col, 255);
 		
 	}
-	else imageFiltered->setPixel(row, col, 0);
+	else sobelImage->setPixel(row, col, 0);
 	
 }
 
 void SobelFilter::nonMaximalSuppression(const int & sideNeighbors)
 {
-	
+	nonMaximalImage = new Image(*sobelImage);
 	nonMaximalMagnitudes = new Matrix<int> (*gradientMagnitudes);
 	nonMaximalAngles = new Matrix<int> (gradientMagnitudes->getRows(), gradientMagnitudes->getCols());
 	
@@ -265,13 +235,15 @@ void SobelFilter::nonMaximalSuppression(const int & sideNeighbors)
 	
 	for(int row = start; row < endRow; ++row){
 		for(int col = start; col < endCol; ++col){
-			nonMaximalSuppressionOperation(row, col, sideNeighbors);
+			if(nonMaximalSuppressionOperation(row, col, sideNeighbors)) {
+				nonMaximalImage->setPixel(row, col, 0);
+			}
 		}
 	}
 	
 }
 
-void SobelFilter::nonMaximalSuppressionOperation(const int & row, const int & col, const int & sideNeighbors)
+bool SobelFilter::nonMaximalSuppressionOperation(const int & row, const int & col, const int & sideNeighbors)
 {
 	int end	= (sideNeighbors * 2) + 1;	
 	int rowIdx = 0;
@@ -281,30 +253,31 @@ void SobelFilter::nonMaximalSuppressionOperation(const int & row, const int & co
 	
 	int angle = gradientAngles->getAt(row, col);
 	int magnitude = gradientMagnitudes->getAt(row, col);
+	bool suppressed = false;
 	
 	if( angle != 0 ) {
-		// if( angle == 135 || angle == 315 ) {
-		if( angle == 45 || angle == 225 ) {
+		if( angle == 135 || angle == 315 ) {
+		// if( angle == 45 || angle == 225 ) {
 			rowIdx = row - sideNeighbors;
 			colIdx = col - sideNeighbors;
 			rowIncr = 1;
 			colIncr = 1;
 		}
-		// else if( angle == 180 || angle == 360 ){
-		else if( angle == 90 || angle == 270 ){
-			rowIdx = row;
+		else if( angle == 180 || angle == 360 ){
+		// else if( angle == 90 || angle == 270 ){
+			rowIdx = row;             
 			colIdx = col - sideNeighbors;
 			colIncr = 1;
 		}
-		// else if( angle == 45 || angle == 225 ){
-		else if( angle == 135 || angle == 315 ){
+		else if( angle == 45 || angle == 225 ){
+		// else if( angle == 135 || angle == 315 ){
 			rowIdx = row - sideNeighbors;
 			colIdx = col + sideNeighbors;
 			rowIncr = 1;
 			colIncr = -1;
 		}
-		// else if( angle == 90 || angle == 270 ){
-		else if( angle == 180 || angle == 360 ){
+		else if( angle == 90 || angle == 270 ){
+		// else if( angle == 180 || angle == 360 ){
 			rowIdx = row - sideNeighbors;
 			colIdx = col;
 			rowIncr = 1;
@@ -316,6 +289,7 @@ void SobelFilter::nonMaximalSuppressionOperation(const int & row, const int & co
 				if( magnitude < gradientMagnitudes->getAt(rowIdx, colIdx) ) {
 					nonMaximalMagnitudes->setAt(row, col, 0);
 					nonMaximalAngles->setAt(row, col, 0);
+					suppressed = true;
 					break;
 				}
 			}
@@ -323,5 +297,209 @@ void SobelFilter::nonMaximalSuppressionOperation(const int & row, const int & co
 			colIdx += colIncr;
 		}
 	}
+	return suppressed;
+}
+
+void SobelFilter::hysteresis(const int & lowThreshold, const int & highThreshold){
+	hysteresisImage = new Image(*nonMaximalImage);
+	hysteresisMagnitudes = new Matrix<int> (*nonMaximalMagnitudes);
+	
+	int endRow = nonMaximalMagnitudes->getrows();
+	int endCol = nonMaximalMagnitudes->getCols();
+	
+	
+	
+	for(int rowIdx = 0; rowIdx < endRow; ++rowIdx){
+		for(int colIdx = 0; colIdx < endcol; ++colIdx){
+			if( nonMaximalMagnitudes->getAt(rowIdx, colIdx) > highThreshold ) {
+				hysteresisMagnitudes->setAt(rowIdx, colIdx, 1); // Edge
+			}
+			else if(nonMaximalMagnitudes->getAt(rowIdx, colIdx) < lowThreshold){
+			  hysteresisMagnitudes->setAt(rowIdx, colIdx, 0); // No Edge
+			}
+			else { //if(	nonMaximalMagnitudes->getAt(rowIdx, colIdx) >= lowThreshold &&
+						//	nonMaximalMagnitudes->getAt(rowIdx, colIdx) <= highThreshold){
+			  hysteresisMagnitudes->setAt(rowIdx, colIdx, 2); // Edge candidate
+			}
+		}
+	}
+	
+	endRow = hysteresisMagnitudes->getrows();
+	endCol = hysteresisMagnitudes->getCols();
+	// int magnitude = 0;
+	
+	for(int rowIdx = 0; rowIdx < endRow; ++rowIdx){
+		for(int colIdx = 0; colIdx < endcol; ++colIdx){
+			if( hysteresisMagnitudes->getAt(rowIdx, colIdx) == 2) {
+				
+				if( hysteresisMagnitudes->getAt(rowIdx-1, 	colIdx-1) 	== 1 ||
+						hysteresisMagnitudes->getAt(rowIdx-1, 	colIdx) 		== 1 ||
+						hysteresisMagnitudes->getAt(rowIdx-1, 	colIdx+1) 	== 1 ||
+						hysteresisMagnitudes->getAt(rowIdx, 		colIdx-1) 	== 1 ||
+						hysteresisMagnitudes->getAt(rowIdx, 		colIdx+1) 	== 1 ||
+						hysteresisMagnitudes->getAt(rowIdx+1, 	colIdx-1) 	== 1 ||
+						hysteresisMagnitudes->getAt(rowIdx+1, 	colIdx) 		== 1 ||
+						hysteresisMagnitudes->getAt(rowIdx+1, 	colIdx+1) 	== 1 ||
+					)
+				{
+					hysteresisMagnitudes->setAt(rowIdx, colIdx, 1);
+				}
+				else
+					hysteresisMagnitudes->setAt(rowIdx, colIdx, 0);
+			}
+		}
+	}
+	
+	
+}
+
+Image * SobelFilter::createAnglesColorImage(process_stage_t processStageForImage){
+	Image * colorAnglesImage = NULL; 
+	switch (processStageForImage){
+		case SOBEL:{
+			colorAnglesImage = constructColorImage(sobelImage);
+			break;
+		}
+		case NON_MAXIMAL:{
+			colorAnglesImage = constructColorImage(nonMaximalImage);
+			break;
+		}
+		case HYSTERESIS:{
+			colorAnglesImage = constructColorImage(hysteresisImage);
+			break;
+		}
+		default:
+			break;
+	}
+	return colorAnglesImage;
+}
+
+Image * SobelFilter::constructColorImage(Image * originImage){
+	int rowsEnd = originImage->getRows();
+	int colsEnd = originImage->getCols();
+	int angle = 0;
+	
+	Image * colorImage = new Image(originImage->getWidth(), originImage->getHeight(), Image::P3, 255, 0);
+	
+	for(int row = 0; row < rowsEnd; ++row){
+		for(int col = 0; col < colsEnd; ++col){
+			if(originImage->getPixel(row, col) != 0){
+				angle = gradientAngles->getAt(row,col);
+				
+				if( angle == 135 || angle == 315 ) {
+					colorImage->setPixel(row,col,0,255,0);		//Green
+				}
+				else if( angle == 180 || angle == 360 ){
+					colorImage->setPixel(row,col,0,0,255);		//Blue
+				}
+				else if( angle == 45 || angle == 225 ){
+					colorImage->setPixel(row,col,255,0,0);		//Red
+				}
+				else if( angle == 90 || angle == 270 ){
+					colorImage->setPixel(row,col,255,255,0);	//Yellow
+				}
+			}
+		}
+	}
+	return colorImage;
+}
+
+
+//Accesors
+Matrix<double> * SobelFilter::getVerticalMask()
+{
+  return verticalMask;
+}
+
+void SobelFilter::setVerticalMask(Matrix<double> * verticalMaskValue)
+{
+  verticalMask = verticalMaskValue;
+}
+
+Matrix<double> * SobelFilter::getHorizontalMask()
+{
+  return horizontalMask;
+}
+
+void SobelFilter::setHorizontalMask(Matrix<double> * horizontalMaskValue)
+{
+  horizontalMask = horizontalMaskValue;
+}
+
+Matrix<double> * SobelFilter::getVerticalMatrix()
+{
+  return verticalMatrix;
+}
+
+void SobelFilter::setVerticalMatrix(Matrix<double> * verticalMatrixValue)
+{
+  verticalMatrix = verticalMatrixValue;
+}
+
+Matrix<double> * SobelFilter::getHorizontalMatrix()
+{
+  return horizontalMatrix;
+}
+
+void setHorizontalMatrix(Matrix<double> * horizontalMatrixValue);
+
+void SobelFilter::setHorizontalMatrix(Matrix<double> * horizontalMatrixValue)
+{
+  horizontalMatrix = horizontalMatrixValue;
+}
+
+Matrix<int> * SobelFilter::getGradientMagnitudes()
+{
+  return gradientMagnitudes;
+}
+
+void SobelFilter::setGradientMagnitudes(Matrix<int> * gradientMagnitudesValue)
+{
+  gradientMagnitudes = gradientMagnitudesValue;
+}
+
+Matrix<int> * SobelFilter::getGradientAngles()
+{
+  return gradientAngles;
+}
+
+void SobelFilter::setGradientAngles(Matrix<int> * gradientAnglesValue)
+{
+  gradientAngles = gradientAnglesValue;
+}
+
+Matrix<int> * SobelFilter::getNonMaximalMagnitudes()
+{
+  return nonMaximalMagnitudes;
+}
+
+void SobelFilter::setNonMaximalMagnitudes(Matrix<int> * nonMaximalMagnitudesValue)
+{
+  nonMaximalMagnitudes = nonMaximalMagnitudesValue;
+}
+
+Matrix<int> * SobelFilter::getNonMaximalAngles()
+{
+  return nonMaximalAngles;
+}
+
+void SobelFilter::setNonMaximalAngles(Matrix<int> * nonMaximalAnglesValue)
+{
+  nonMaximalAngles = nonMaximalAnglesValue;
+}
+
+Image * SobelFilter::getSobelImage()
+{
+  return sobelImage;
+}
+
+Image * SobelFilter::getNonMaximalImage()
+{
+  return nonMaximalImage;
+}
+
+Image * SobelFilter::getHysteresisImage()
+{
+  return hysteresisImage;
 }
 
