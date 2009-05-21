@@ -27,6 +27,7 @@ class SobelFilter {
 		Matrix<int> * nonMaximalMagnitudes;
 		Matrix<int> * nonMaximalAngles;
 		Matrix<int> * hysteresisMagnitudes;
+    QVector<QVector<int>> * edgePaths;
 		
 		Image * sobelImage;
 		Image * nonMaximalImage;
@@ -45,6 +46,8 @@ class SobelFilter {
 		bool nonMaximalSuppressionOperation(const int & row, const int & col, const int & sideNeighbors);
 		Image * constructColorImage(Image * originImage);
 		void hysteresis(const int & lowThreshold, const int & highThreshold);
+		void followEdges(const int & row, const int & col);
+		void magnitudesTurn(const int & gradientNormal);
 		
 		
 	public:
