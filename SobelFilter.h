@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <cmath>
+#include <QPoint>
+#include <QVector>
 #include "Image.h"
 #include "ConvolutionOperation.h"
 #include "utils/Matrix.h"
@@ -15,7 +17,9 @@ class SobelFilter {
 		enum process_stage_t {SOBEL, NON_MAXIMAL, HYSTERESIS};
 		
 	private:
-		int borderColor;
+    int lowThreshold;
+    int highThreshold;
+		int edgeColor;
 		int backgroundColor;
 		Matrix<double> * verticalMask;
 		Matrix<double> * horizontalMask;
@@ -27,7 +31,7 @@ class SobelFilter {
 		Matrix<int> * nonMaximalMagnitudes;
 		Matrix<int> * nonMaximalAngles;
 		Matrix<int> * hysteresisMagnitudes;
-    QVector<QVector<int>> * edgePaths;
+    QVector< QVector<QPoint> > * edgePaths;
 		
 		Image * sobelImage;
 		Image * nonMaximalImage;
@@ -45,13 +49,21 @@ class SobelFilter {
 		void nonMaximalSuppression(const int & sideNeighbors);
 		bool nonMaximalSuppressionOperation(const int & row, const int & col, const int & sideNeighbors);
 		Image * constructColorImage(Image * originImage);
-		void hysteresis(const int & lowThreshold, const int & highThreshold);
-		void followEdges(const int & row, const int & col);
-		void magnitudesTurn(const int & gradientNormal);
-		
+		void hysteresis();
+		void checkForEdgePoints(const int & gradientNormal);
+    int calculateNormal(const int & angle);
+    void verifyThisPoint(const int & row, const int & col, const int & gradientNormal);
+		void followThisEdge(const int & row, const int & col, const int & gradientNormal);
+    void SobelFilter::findNeighboringEdgePoint(const int & row, 
+                                               const int & col, 
+                                               const int & gradientNormal,
+                                               const int & depth,
+                                               QVector<QPoint> & currentPath,
+                                               QVector<bool> & edgePointsFound);
+    
 		
 	public:
-		SobelFilter(const int & borderColor = 255, const int & backgroundColor = 0);
+		SobelFilter(const int & lowThreshold, const int & highThreshold, const int & edgeColor = 255, const int & backgroundColor = 0);
 		virtual ~SobelFilter();
 		
 		Image sobel(Image * image, const int & threshold);

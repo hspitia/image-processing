@@ -1,8 +1,10 @@
 #include "SobelFilter.h"
 
-SobelFilter::SobelFilter(const int & borderColor, const int & backgroundColor){
+SobelFilter::SobelFilter(const int & lowThreshold, const int & highThreshold, const int & edgeColor, const int & backgroundColor){
 	// createMasks();
-	this->borderColor = borderColor;
+  this->lowThreshold = lowThreshold;
+  this->highThreshold = highThreshold;
+	this->edgeColor = edgeColor;
 	this->backgroundColor = backgroundColor;
 	
 	verticalMask = NULL;
@@ -16,7 +18,7 @@ SobelFilter::SobelFilter(const int & borderColor, const int & backgroundColor){
 	nonMaximalMagnitudes = NULL;
 	nonMaximalAngles = NULL;
 	hysteresisMagnitudes = NULL;
-	edgesPaths = NULL;
+	edgePaths = NULL;
 	
 	sobelImage = NULL;
 	nonMaximalImage = NULL;
@@ -53,6 +55,8 @@ SobelFilter::~SobelFilter(){
 	if(hysteresisMagnitudes != NULL) delete hysteresisMagnitudes;
 	hysteresisMagnitudes = NULL;
 	
+  if(edgePaths != NULL) delete edgePaths;
+	edgePaths = NULL;
 	
 	if(sobelImage != NULL) delete sobelImage;
 	sobelImage = NULL;
@@ -62,6 +66,7 @@ SobelFilter::~SobelFilter(){
 	
 	if(hysteresisImage != NULL) delete hysteresisImage;
 	hysteresisImage = NULL;
+  
 }
 
 Image SobelFilter::sobel(Image * image, const int & threshold){
@@ -70,26 +75,25 @@ Image SobelFilter::sobel(Image * image, const int & threshold){
 	createMasks();
 	initMatrices(image);
 	
-	int endRow = image->getRows() - 1;
-	int endCol = image->getCols() - 1;
+	int rowEnd = image->getRows() - 1;
+	int colEnd = image->getCols() - 1;
 	
 	double magnitudeX = 0.0;
 	double magnitudeY = 0.0;
 	
 	// Convolution for image central area
-	for(int rowIdx = 1; rowIdx < endRow; ++rowIdx){
-		for(int colIdx = 1; colIdx < endCol; ++colIdx){
+	for(int rowIdx = 1; rowIdx < rowEnd; ++rowIdx){
+		for(int colIdx = 1; colIdx < colEnd; ++colIdx){
 			magnitudeX = ConvolutionOperation::convolutionCenter(rowIdx, colIdx, image, *horizontalMask);
 			magnitudeY = ConvolutionOperation::convolutionCenter(rowIdx, colIdx, image, *verticalMask);
-			// cout << "DEBUG " <<rowIdx<<", "<<colIdx<< endl;
 			setValues(rowIdx, colIdx, magnitudeX, magnitudeY, threshold);
 		}
 	}
 	
 	// Convolution for columns out borders (left and right)
-	int rightColIdx = endCol;
+	int rightColIdx = colEnd;
 	int colIdx = 0;
-	for(int rowIdx = 1; rowIdx < endRow; ++rowIdx){
+	for(int rowIdx = 1; rowIdx < rowEnd; ++rowIdx){
 		// Upper row
 		magnitudeX = ConvolutionOperation::convolutionBorder(rowIdx, colIdx, image, *horizontalMask);
 		magnitudeY = ConvolutionOperation::convolutionBorder(rowIdx, colIdx, image, *verticalMask);
@@ -102,11 +106,11 @@ Image SobelFilter::sobel(Image * image, const int & threshold){
 	}
 	
 	// Convolution for rows out borders (up and bottom)
-	endCol++;
-	int lowerRowIdx = endRow;
+	colEnd++;
+	int lowerRowIdx = rowEnd;
 	int rowIdx = 0;
 	
-	for(int colIdx = 0; colIdx < endCol; ++colIdx){
+	for(int colIdx = 0; colIdx < colEnd; ++colIdx){
 		// Upper row
 		magnitudeX = ConvolutionOperation::convolutionBorder(rowIdx, colIdx, image, *horizontalMask);
 		magnitudeY = ConvolutionOperation::convolutionBorder(rowIdx, colIdx, image, *verticalMask);
@@ -118,6 +122,7 @@ Image SobelFilter::sobel(Image * image, const int & threshold){
 		setValues(lowerRowIdx, colIdx, magnitudeX, magnitudeY, threshold);
 	}
 	nonMaximalSuppression(2);
+  hysteresis();
 	
 	return (*sobelImage);
 }
@@ -216,7 +221,7 @@ void SobelFilter::setValues(	const int & row,
 	gradientAngles->setAt(row, col, angle);
 	
 	if(magnitude >= threshold) {
-		// cout << "DEBUG - dentro setValues" << endl<<"magnitude "<<magnitude<<", threshold "<<threshold<<endl;
+		// // cout << "DEBUG - dentro setValues" << endl<<"magnitude "<<magnitude<<", threshold "<<threshold<<endl;
 		sobelImage->setPixel(row, col, 255);
 		
 	}
@@ -231,11 +236,11 @@ void SobelFilter::nonMaximalSuppression(const int & sideNeighbors)
 	nonMaximalAngles = new Matrix<int> (gradientMagnitudes->getRows(), gradientMagnitudes->getCols());
 	
 	int start = sideNeighbors;
-	int endRow = gradientMagnitudes->getRows() - sideNeighbors;
-	int endCol = gradientMagnitudes->getCols() - sideNeighbors;
+	int rowEnd = gradientMagnitudes->getRows() - sideNeighbors;
+	int colEnd = gradientMagnitudes->getCols() - sideNeighbors;
 	
-	for(int row = start; row < endRow; ++row){
-		for(int col = start; col < endCol; ++col){
+	for(int row = start; row < rowEnd; ++row){
+		for(int col = start; col < colEnd; ++col){
 			if(nonMaximalSuppressionOperation(row, col, sideNeighbors)) {
 				nonMaximalImage->setPixel(row, col, 0);
 			}
@@ -283,9 +288,9 @@ bool SobelFilter::nonMaximalSuppressionOperation(const int & row, const int & co
 			colIdx = col;
 			rowIncr = 1;
 		}
-		// cout <<"\n- "<<row<<"," <<col<<" Magnitude: "<<magnitude<<" Angle: "<< angle<< endl;
+		// // cout <<"\n- "<<row<<"," <<col<<" Magnitude: "<<magnitude<<" Angle: "<< angle<< endl;
 		for(int i = 0; i < end; ++i){
-			// cout <<"  " <<rowIdx <<"," <<colIdx<<" Magnitude: "<<gradientMagnitudes->getAt(rowIdx, colIdx)<<" Angle: "<<gradientAngles->getAt(rowIdx, colIdx) << endl;
+			// // cout <<"  " <<rowIdx <<"," <<colIdx<<" Magnitude: "<<gradientMagnitudes->getAt(rowIdx, colIdx)<<" Angle: "<<gradientAngles->getAt(rowIdx, colIdx) << endl;
 			if( angle == gradientAngles->getAt(rowIdx, colIdx) ) {
 				if( magnitude < gradientMagnitudes->getAt(rowIdx, colIdx) ) {
 					nonMaximalMagnitudes->setAt(row, col, 0);
@@ -301,79 +306,233 @@ bool SobelFilter::nonMaximalSuppressionOperation(const int & row, const int & co
 	return suppressed;
 }
 
-void SobelFilter::hysteresis(const int & lowThreshold, const int & highThreshold){
+void SobelFilter::hysteresis(){
 	hysteresisImage = new Image(*nonMaximalImage);
 	hysteresisMagnitudes = new Matrix<int> (*nonMaximalMagnitudes);
-	Matrix<int> * pointMarks = new Matrix<int>(hysteresisMagnitudes->getRows(), 
-																						hysteresisMagnitudes->getCols(), 0);
-	
-	// 90 dgrees normal
-	magnitudesTurn(90);
-	
-	
-}
-
-void SobelFilter::magnitudesTurn(const int & gradientNormal){
+	// Matrix<int> * pointMarks = new Matrix<int>(hysteresisMagnitudes->getRows(), 
+																						// hysteresisMagnitudes->getCols(), 0);
+	edgePaths = new QVector< QVector<QPoint> > ();
+  int angle = 270;
+  cout << "*** checkForEdgePoints(" << angle <<"): ***" << endl;
+	// checkForEdgePoints(270);
+	// checkForEdgePoints(90);
+	// checkForEdgePoints(360);
+	checkForEdgePoints(angle);
   
-	int startRow = 0;
-	int startCol = 0;
-	int endRow = nonMaximalMagnitudes->getrows();
-	int endCol = nonMaximalMagnitudes->getCols();
-	int iterations = 0;
 	
-	if(gradientNormal == 90){
-		endRow = nonMaximalMagnitudes->getrows();
-		endCol = nonMaximalMagnitudes->getCols(); 
-	}
-	else if(gradientNormal == ){
-	  
-	}
-		startRow = 0;
-		startCol = 0;
-	
-	
-	for(int rowIdx = startRow; rowIdx < endRow; ++rowIdx){
-		for(int colIdx = startRow; colIdx < endcol; ++colIdx){
-			angle = gradientAngles->getAt(rowIdx, colIdx);
-			if (angle == )
-				hysteresisMagnitudes->setAt(rowIdx, colIdx, 1); // Edge
-				
-			
-		}
-	}
 }
 
-void SobelFilter::followEdges(const int & row, const int & col){
-	edgesPaths = new QVector();
-	QVector<int> currentPath();
+void SobelFilter::checkForEdgePoints(const int & gradientNormal){
+	int rowStart = 0;
+	int colStart = 0;
+	int rowEnd = 0;
+	int colEnd = 0;
 	
-	angle = gradientAngles->getAt(row, col);
-	
-	int startRow = 0;
-	int startCol = 0;
-	int endRow = 0;
-	int endCol = 0;
-	
-	if(angle == 360 || angle == 180){
-		
-	} 
-	else if(angle == 45 || angle == 225){
-	  
+	if(gradientNormal == 270 || gradientNormal == 315){
+		rowEnd = nonMaximalMagnitudes->getRows();
+		colEnd = nonMaximalMagnitudes->getCols();
+    
+    for(int rowIdx = rowStart; rowIdx < rowEnd; ++rowIdx){
+      for(int colIdx = rowStart; colIdx < colEnd; ++colIdx){
+        verifyThisPoint(rowIdx, colIdx, gradientNormal);
+      }
+      // cout<< endl;
+    }
+  }
+    
+	else if(gradientNormal == 90 || gradientNormal == 135){
+	  rowStart = nonMaximalMagnitudes->getRows() - 1;
+    colStart = nonMaximalMagnitudes->getCols() - 1;
+    rowEnd = 0;
+    colEnd = 0;
+    
+    for(int rowIdx = rowStart; rowIdx >= rowEnd; --rowIdx){
+      for(int colIdx = rowStart; colIdx >= colEnd; --colIdx){
+        // verifyThisPoint(rowIdx, colIdx, gradientNormal);
+        // cout << "("<<rowIdx <<","<<colIdx<<")";
+      }
+      // cout<< endl;
+    }
 	}
-	else if(angle == 90 || angle == 270){
-	  
+  else if(gradientNormal == 360 || gradientNormal == 45){
+	  rowStart = nonMaximalMagnitudes->getRows() - 1;
+    colStart = 0;
+    rowEnd = 0;
+    colEnd = nonMaximalMagnitudes->getCols();
+    // cout << "colStart: "<<colStart<<"colEnd: " << colEnd  <<"rowStart: "<<rowStart<<"rowEnd: " << rowEnd << endl;
+    for(int colIdx = colStart; colIdx < colEnd; ++colIdx){
+      for(int rowIdx = rowStart; rowIdx >= rowEnd; --rowIdx){
+        // verifyThisPoint(rowIdx, colIdx, gradientNormal);
+        // cout << "(" << rowIdx << "," << colIdx << ")";
+      }
+      // cout<< endl;
+    }
 	}
-	else if(angle == 135 || angle == 315){
-	  
+  else if(gradientNormal == 180 || gradientNormal == 225){
+	  rowStart = 0;
+    colStart = nonMaximalMagnitudes->getCols() - 1;
+    rowEnd = nonMaximalMagnitudes->getRows();
+    colEnd = 0;
+    
+    // cout << " rowStart: " << rowStart <<" rowEnd: " << rowEnd <<" colStart: " << colStart <<" colEnd: " << colEnd  << endl;
+    for(int colIdx = colStart; colIdx >= colEnd; --colIdx){
+      for(int rowIdx = rowStart; rowIdx < rowEnd; ++rowIdx){
+        // verifyThisPoint(rowIdx, colIdx, gradientNormal);
+        // cout << "("<<rowIdx <<","<<colIdx<<")";
+      }
+      // cout<< endl;
+    }
 	}
-	else {
-		
-	}
-	int searchLine = 1;
 	
 	
+}
+
+void SobelFilter::verifyThisPoint(const int & row, const int & col, const int & gradientNormal){
+  int magnitude = 0;
+  int tmpNormal = calculateNormal(gradientAngles->getAt(row, col));
+  cout<<"-- DEBUG -- "<<"verifyThisPoint(" << row <<", " << col <<", " << gradientNormal<<")" <<endl;
+  cout << "tmpNormal == gradientNormal ? "<< tmpNormal <<" == "<< gradientNormal<< endl;
+  if (tmpNormal == gradientNormal){
+    magnitude = hysteresisMagnitudes->getAt(row, col);
+    if(magnitude < lowThreshold) {
+      cout << "magnitude < lowThreshold ? "<<magnitude<<" < "<<lowThreshold << endl<<"  no borde"<<endl;
+      hysteresisMagnitudes->setAt(row, col, 0);
+      hysteresisImage->setPixel(row, col, backgroundColor);
+    }
+    else if(magnitude > highThreshold){
+      hysteresisImage->setPixel(row, col, edgeColor);
+      cout << "magnitude > lowThreshold ? "<<magnitude<<" > "<<highThreshold << endl<<"  borde"<<endl;
+      cout << "followThisEdge("<<row<<" , " << col<<" , " << gradientNormal<<")" << endl;
+      // followThisEdge(row, col, gradientNormal);
+    }
+  }
+}
+
+void SobelFilter::followThisEdge(const int & row, const int & col, const int & gradientNormal){
+
+	QVector<QPoint> currentPath = QVector<QPoint> ();
+	// QPoint currentPoint = QPoint(row, col); // Start of this Path
+  // currentPath << currentPoint;
+  currentPath << QPoint(row, col); // Start of this Path
+  
+	int iterations = 0;                  
+  int rowStart = 0;                    
+	int colStart = 0;                    //  Search Range
+	int rowEnd = 0;                      //
+	int colEnd = 0;                      //        m          m -> edge point
+  int rowIncr = 0;                     //  o x - - - x o    - -> depth one
+  int colIncr = 0;                     //  o x x x x x o    x -> depth two
+  int maxDepth = 2;                    //  o o o o o o o    o -> depth tree
+  int rowIdx = 0;
+  int colIdx = 0;
+  int magnitude = 0;
+  int normal = 0;
+  
+  QVector<bool> edgePointsFound = QVector<bool>(maxDepth+1, false);
+  /**
+   * CONTENT DESCRIPTION OF edgPoinsFound VECTOR:
+   * 
+   *                 false iif    |       found in 
+   *                 others are   |      this depth?
+   *                 all  false   |  
+   *                  -------    --------------------------
+   * description  ->   flag        -         x         o
+   * value        -> [ false,    false,    false,    false ]
+   *                     0         1         2         3
+   */
 	
-	edgesPaths.append(currentPath);
+	switch (gradientNormal) {
+    case 270:{
+      for(int depth = 1; depth <= maxDepth; ++depth){
+        
+        // tour of sides points              //  Search Range
+        if (depth > 1) {                     //        m          |            m      
+          rowStart = row + 1;                // -> x       x <-   |   -> o           o <-
+          rowEnd = row + depth;              //    x x x x x      |   -> o           o <-
+          colStart = col - depth;            //                   |      o o o o o o o
+          colIncr = depth * 2;               //
+          
+          for(int rowIdx = rowStart; rowIdx <= rowEnd; ++rowIdx){
+            for(int colIdx = colStart; colIdx < colEnd; colIdx += colIncr){
+              findNeighboringEdgePoint(rowIdx, colIdx, gradientNormal, depth, currentPath, edgePointsFound);
+            }
+          }
+        }
+        
+        // tour of row points                //  Search Range
+        iterations = (depth + 1) * 2;        //        m      |         m        |            m      
+        rowIdx = row + depth;                //   -> - - -    |     x       x    |      o           o
+        colStart = col - depth;              //               |  -> x x x x x    |      o           o
+                                             //               |                  |   -> o o o o o o o
+        
+        for(int colIdx = colStart; colIdx <= iterations; ++colIdx){
+          findNeighboringEdgePoint(rowIdx, colIdx, gradientNormal, depth, currentPath, edgePointsFound);
+        }
+        
+        // Link points?
+        
+      }
+      break;
+    }
+    case 90: {
+      
+      break;
+    }
+    case 360: {
+      
+      break;
+    }
+    case 180: {
+      
+      break;
+    }
+    case 45: {
+      
+      break;
+    }
+    case 135: {
+      
+      break;
+    }
+    case 225: {
+      
+      break;
+    }
+    case 315: {
+      
+      break;
+    }
+    default:{
+      break;
+    }
+  }
+  
+	edgePaths->append(currentPath);
+}
+
+void SobelFilter::findNeighboringEdgePoint(const int & row, 
+                                           const int & col, 
+                                           const int & gradientNormal,
+                                           const int & depth,
+                                           QVector<QPoint> & currentPath,
+                                           QVector<bool> & edgePointsFound){
+    
+  int magnitude = hysteresisMagnitudes->getAt(row, col);
+  int normal = calculateNormal(gradientAngles->getAt(row, col));
+  if(normal == gradientNormal && magnitude <= highThreshold && magnitude >= lowThreshold){
+    hysteresisImage->setPixel(row, col, edgeColor);  // is edge
+    currentPath << QPoint(row, col); // save the point in the current path
+    edgePointsFound[0] = true; // found a point of edge
+    edgePointsFound[depth] = true; // depth at wich found the point
+    followThisEdge(row, col, normal);  // continue with the search 
+  }
+}
+
+
+int SobelFilter::calculateNormal(const int & angle){
+  int normal = angle + 90;
+  if (normal > 360) normal -= 360;
+  return normal;
 }
 
 Image * SobelFilter::createAnglesColorImage(process_stage_t processStageForImage){

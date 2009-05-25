@@ -6,6 +6,7 @@
 #include "Segmentation.h"
 #include "LowPassFilters.h"
 #include "SobelFilter.h"
+#include <QVector>
 
 double gauss(int x, int y);
 
@@ -19,7 +20,7 @@ int main( int argc, char * argv[] )
 	// Image * imagenPpm = new Image("data/Lena.ppm");
 	Image * imagenPpm = new Image(argv[1]);
 	
-	// Escritura de imagen y conversión de color a grises
+	// Escritura de imagen y conversiOn de color a grises
 	imagenPpm->save("data/01_ColorAGrises.pgm", Image::P2);
 	
 	
@@ -30,35 +31,35 @@ int main( int argc, char * argv[] )
 	Histogram * hist = new Histogram(imagen);
 	cout << "Calculo de histograma de una imagen" << endl;
 	
-	// Generación de imagen de histograma
+	// GeneraciOn de imagen de histograma
 	Image imgHistograma = hist->paintHistogram();
 	imgHistograma.save("data/02_histograma.pgm");
-	cout << "Generación de imagen de histograma" << endl;
+	cout << "Generaciï¿½n de imagen de histograma" << endl;
 	
-	// Ecualización de una imagen a través de su histograma
+	// EcualizaciOn de una imagen a travEs de su histograma
 	Image imgEcualizada = hist->equalize(imagen);
 	imgEcualizada.save("data/03_Ecualizada.pgm");
-	cout << "Ecualización de una imagen a través de su histograma" << endl;
+	cout << "Ecualizaciï¿½n de una imagen a travEs de su histograma" << endl;
 	
 	// FUNCIONES CLASE SEGMENTATION
 	// ---------------------------------------------------------------------------------
-	// Cálculo de umbral por método Isodata 
+	// Cï¿½lculo de umbral por mï¿½todo Isodata 
 	int thresholdIsodata = Segmentation::thresholdingIsodata(imagen);
-	cout << "// Cálculo de umbral por método Isodata" << endl;
+	cout << "// Cï¿½lculo de umbral por mEtodo Isodata" << endl;
 	
-	// Cálculo de umbral por método Otsu
+	// Cï¿½lculo de umbral por mEtodo Otsu
 	int thresholdOtsu = Segmentation::thresholdingOtsu(imagen);
-	cout << "// Cálculo de umbral por método Otsu" << endl;
+	cout << "// Cï¿½lculo de umbral por mï¿½todo Otsu" << endl;
 	
-	// Segmentación con umbral Isodata
+	// Segmentaciï¿½n con umbral Isodata
 	Image imgSegmentadaIsodata = Segmentation::segmentate((*imagen), thresholdIsodata);
 	imgSegmentadaIsodata.save("data/04_SegmentedIsodata.pgm");
-	cout << "// Segmentación con umbral Isodata" << endl;
+	cout << "// Segmentaciï¿½n con umbral Isodata" << endl;
 	
-	// Segmentación con umbral Otsu
+	// Segmentaciï¿½n con umbral Otsu
 	Image imgSegmentadaOtsu = Segmentation::segmentate((*imagen), thresholdOtsu);
 	imgSegmentadaOtsu.save("data/05_SegmentedOtsu.pgm");
-	cout << "// Segmentación con umbral Otsu" << endl;
+	cout << "// SegmentaciOn con umbral Otsu" << endl;
 	*/
 	
 	// Filtros paso bajo
@@ -82,21 +83,23 @@ int main( int argc, char * argv[] )
 	// 	if (x != 99 || y != 99) cout<<"gauss: "<<gauss(x,y)<<endl;
 	// }
 	
-	SobelFilter sobel = SobelFilter();
+	SobelFilter sobel = SobelFilter(40,128);
 	Image * img = new Image(argv[1]); 
 	Image filtered = sobel.sobel(img,80);
 	
 	filtered.save("data/07_SobelFiltered.pgm");
 	Image * imgSobel = sobel.getSobelImage();	
 	Image * colorSobel = sobel.createAnglesColorImage(SobelFilter::SOBEL);
-	// imgSobel->save("data/07_SobelFiltered_2.pgm");
+	imgSobel->save("data/07_SobelFiltered_2.pgm");
 	colorSobel->save("data/08_ColorSobelFiltered.pgm");
 	Image * imgNonMaximal = sobel.getNonMaximalImage();
 	imgNonMaximal->save("data/09_nonMaximalFiltered.pgm");
 	
 	Image * colorNonMaximal = sobel.createAnglesColorImage(SobelFilter::NON_MAXIMAL);
 	colorNonMaximal->save("data/10_colorNonMaximalFiltered.pgm");
-	
+  
+  
+  
 	return 0;//status
 }
 
