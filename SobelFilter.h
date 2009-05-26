@@ -15,7 +15,7 @@ using namespace std;
 class SobelFilter {
 	public:
 		enum process_stage_t {SOBEL, NON_MAXIMAL, HYSTERESIS};
-		
+
 	private:
     int lowThreshold;
     int highThreshold;
@@ -50,21 +50,42 @@ class SobelFilter {
 		bool nonMaximalSuppressionOperation(const int & row, const int & col, const int & sideNeighbors);
 		Image * constructColorImage(Image * originImage);
 		void hysteresis();
+		// void checkForEdgePoints(const int & gradientNormal, const int & maxDepth);
 		void checkForEdgePoints(const int & gradientNormal);
     int calculateNormal(const int & angle);
-    void verifyThisPoint(const int & row, const int & col, const int & gradientNormal);
-		void followThisEdge(const int & row, const int & col, const int & gradientNormal);
+    // void verifyThisPoint(const int & row, 
+                         // const int & col, 
+                         // const int & gradientNormal,
+                         // const int & maxDepth);
+    void verifyThisPoint(const int & row, 
+                         const int & col, 
+                         const int & gradientNormal);
+		// void followThisEdge(const int & row, 
+                        // const int & col,
+                        // const int & gradientNormal,
+                        // const int & maxDepth);
+    void followThisEdge(const int & row, 
+                        const int & col,
+                        const int & gradientNormal);
+    // void SobelFilter::findNeighboringEdgePoint(const int & row, 
+                                               // const int & col, 
+                                               // const int & gradientNormal,
+                                               // const int & depth,
+                                               // const int & maxDepth,
+                                               // QVector<QPoint> & currentPath,
+                                               // QVector<bool> & edgePointsFound);
     void SobelFilter::findNeighboringEdgePoint(const int & row, 
                                                const int & col, 
                                                const int & gradientNormal,
                                                const int & depth,
                                                QVector<QPoint> & currentPath,
                                                QVector<bool> & edgePointsFound);
-    
 		
 	public:
 		SobelFilter(const int & lowThreshold, const int & highThreshold, const int & edgeColor = 255, const int & backgroundColor = 0);
 		virtual ~SobelFilter();
+    
+    static const int MAX_DEPTH;
 		
 		Image sobel(Image * image, const int & threshold);
 		
@@ -90,6 +111,7 @@ class SobelFilter {
 		Image * getHysteresisImage();
 		
 		Image * createAnglesColorImage(process_stage_t processStageForImage);
+    
 };
 #endif        //  #ifndef SOBELFILTER_H
 

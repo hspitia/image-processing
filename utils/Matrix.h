@@ -1,6 +1,7 @@
 #ifndef MATRIZ_H
 #define MATRIZ_H
 
+#include <fstream>
 #include <iostream>
 #include <iomanip>
 #include "require.h"
@@ -118,6 +119,20 @@ class Matrix
 			(*objMatrix).imprimir(outStream);
 			return outStream;
 		}
+    
+    void save(const char * fileName){
+      ofstream outputFile(fileName);
+      if(matrix != NULL){
+				for(int i = 0; i < rows; i++ ){
+					for(int j = 0; j < cols; j++ ){
+						outputFile<<setw(5)<<matrix[i][j]<<" ";
+					}
+					outputFile<<endl;
+				}
+			}
+			else
+				outputFile<<"NULL"<<endl;
+    }
 };
 
 #endif // MATRIZ_H

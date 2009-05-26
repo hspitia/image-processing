@@ -88,9 +88,9 @@ int main( int argc, char * argv[] )
 	Image filtered = sobel.sobel(img,80);
 	
 	filtered.save("data/07_SobelFiltered.pgm");
-	Image * imgSobel = sobel.getSobelImage();	
+	// Image * imgSobel = sobel.getSobelImage();	
 	Image * colorSobel = sobel.createAnglesColorImage(SobelFilter::SOBEL);
-	imgSobel->save("data/07_SobelFiltered_2.pgm");
+	// imgSobel->save("data/07_SobelFiltered_2.pgm");
 	colorSobel->save("data/08_ColorSobelFiltered.pgm");
 	Image * imgNonMaximal = sobel.getNonMaximalImage();
 	imgNonMaximal->save("data/09_nonMaximalFiltered.pgm");
@@ -98,7 +98,7 @@ int main( int argc, char * argv[] )
 	Image * colorNonMaximal = sobel.createAnglesColorImage(SobelFilter::NON_MAXIMAL);
 	colorNonMaximal->save("data/10_colorNonMaximalFiltered.pgm");
   
-  
+  // (sobel.getGradientAngles())->save("data/matrix.txt");
   
 	return 0;//status
 }
