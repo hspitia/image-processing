@@ -270,28 +270,24 @@ bool SobelFilter::nonMaximalSuppressionOperation(const int & row, const int & co
 	
   //CAMBIO//
 	if( angle != 0 ) {
-		/*-*/if( angle == 135 || angle == 315 ) {
-		// /*+*/if( angle == 45 || angle == 225 ) {
+		if( angle == 135 || angle == 315 ) {
 			rowIdx = row - sideNeighbors;
 			colIdx = col - sideNeighbors;
 			rowIncr = 1;
 			colIncr = 1;
 		}
-		/*-*/else if( angle == 180 || angle == 360 ){
-		// /*+*/else if( angle == 90 || angle == 270 ){
+		else if( angle == 180 || angle == 360 ){
 			rowIdx = row;             
 			colIdx = col - sideNeighbors;
 			colIncr = 1;
 		}
-		/*-*/else if( angle == 45 || angle == 225 ){
-		// /*+*/else if( angle == 135 || angle == 315 ){
+		else if( angle == 45 || angle == 225 ){
 			rowIdx = row - sideNeighbors;
 			colIdx = col + sideNeighbors;
 			rowIncr = 1;
 			colIncr = -1;
 		}
-		/*-*/else if( angle == 90 || angle == 270 ){
-		// /*+*/else if( angle == 180 || angle == 360 ){
+		else if( angle == 90 || angle == 270 ){
 			rowIdx = row - sideNeighbors;
 			colIdx = col;
 			rowIncr = 1;
@@ -316,17 +312,7 @@ bool SobelFilter::nonMaximalSuppressionOperation(const int & row, const int & co
 void SobelFilter::hysteresis(){
 	hysteresisImage = new Image(nonMaximalImage->getWidth(), nonMaximalImage->getHeight(), Image::P2, 255, backgroundColor);
 	hysteresisMagnitudes = new Matrix<int> (*nonMaximalMagnitudes);
-	// Matrix<int> * pointMarks = new Matrix<int>(hysteresisMagnitudes->getRows(), 
-																						// hysteresisMagnitudes->getCols(), 0);
 	edgePaths = new QVector< QVector<QPoint> > ();
-  // int angle = 270;
-  // int MAX_DEPTHs = 3;
-  // /*1*/cout << "Imagen (maxRow, maxCol): "<< "(" << hysteresisImage->getRows() - 1 << "," << hysteresisImage->getCols() - 1 << ")" << endl;
-  // /*1*/cout << "*** checkForEdgePoints(" << angle <<"): ***" << endl;
-	// checkForEdgePoints(270);
-	// checkForEdgePoints(90);
-	// checkForEdgePoints(360);
-	// checkForEdgePoints(angle, MAX_DEPTH);
   
 	checkForEdgePoints(270);
   checkForEdgePoints(90);
@@ -336,7 +322,6 @@ void SobelFilter::hysteresis(){
 	
 }
 
-// void SobelFilter::checkForEdgePoints(const int & gradientNormal, const int & MAX_DEPTH){
 void SobelFilter::checkForEdgePoints(const int & gradientNormal){
   QVector<QPoint> currentPath = QVector<QPoint> ();
 	int rowStart = 0;
@@ -350,11 +335,8 @@ void SobelFilter::checkForEdgePoints(const int & gradientNormal){
     
     for(int rowIdx = rowStart; rowIdx < rowEnd; ++rowIdx){
       for(int colIdx = colStart; colIdx < colEnd; ++colIdx){
-        // verifyThisPoint(rowIdx, colIdx, gradientNormal, maxDepth);
         verifyThisPoint(rowIdx, colIdx, gradientNormal, currentPath);
-        // /*1*/cout << "(" << rowIdx << "," << colIdx << ")";
       }
-      // /*1*/cout << endl;
     }
   }
 
@@ -367,9 +349,7 @@ void SobelFilter::checkForEdgePoints(const int & gradientNormal){
     for(int rowIdx = rowStart; rowIdx >= rowEnd; --rowIdx){
       for(int colIdx = colStart; colIdx >= colEnd; --colIdx){
         verifyThisPoint(rowIdx, colIdx, gradientNormal, currentPath);
-        // /*1*/cout <<  "(" << rowIdx << "," << colIdx << ")";
       }
-      // /*1*/cout << endl;
     }
 	}
   else if(gradientNormal == 360 || gradientNormal == 45){
@@ -380,9 +360,7 @@ void SobelFilter::checkForEdgePoints(const int & gradientNormal){
     for(int colIdx = colStart; colIdx < colEnd; ++colIdx){
       for(int rowIdx = rowStart; rowIdx >= rowEnd; --rowIdx){
         verifyThisPoint(rowIdx, colIdx, gradientNormal, currentPath);
-        // /*1*/cout <<  "(" << rowIdx << "," << colIdx << ")";
       }
-      // /*1*/cout << endl;
     }
 	}
   else if(gradientNormal == 180 || gradientNormal == 225){
@@ -394,9 +372,7 @@ void SobelFilter::checkForEdgePoints(const int & gradientNormal){
     for(int colIdx = colStart; colIdx >= colEnd; --colIdx){
       for(int rowIdx = rowStart; rowIdx < rowEnd; ++rowIdx){
         verifyThisPoint(rowIdx, colIdx, gradientNormal, currentPath);
-        // /*1*/cout <<  "(" << rowIdx << "," << colIdx << ")";
       }
-      // /*1*/cout << endl;
     }
 	}
 	
@@ -409,38 +385,24 @@ void SobelFilter::verifyThisPoint(const int & row,
                                   QVector<QPoint> & currentPath){
   int magnitude = 0;
   int tmpNormal = calculateNormal(gradientAngles->getAt(row, col));
-  // cout<<"** verifyThisPoint(" << row <<", " << col <<", " << gradientNormal<<")  "<<endl;
-  // cout << "   tmpNormal == gradientNormal ? "<< tmpNormal <<" == "<< gradientNormal<< endl;
   if (tmpNormal == gradientNormal){
-    // /*2*/cout<<"** verifyThisPoint(" << row <<", " << col <<", " << gradientNormal<<")  "<<endl;
     magnitude = nonMaximalMagnitudes->getAt(row, col);
     if(magnitude < lowThreshold) {
-      // /*2*/cout << "   magnitude < lowThreshold ? "<<magnitude<<" < "<<lowThreshold <<"   -> NO BORDE"<<endl;
       hysteresisMagnitudes->setAt(row, col, 0);
       hysteresisImage->setPixel(row, col, backgroundColor);
     }
     else if(magnitude > highThreshold){
       hysteresisImage->setPixel(row, col, edgeColor);
-      // /*2*/cout << "   magnitude > lowThreshold ? "<<magnitude<<" > "<<highThreshold <<"  -> BORDE"<<endl;
-      // /*2*/cout << "     followThisEdge("<<row<<" , " << col<<" , " << gradientNormal<<")" << endl;
-      // followThisEdge(row, col, gradientNormal, maxDepth);
-      // currentPath << QPoint(row, col);
       followThisEdge(row, col, gradientNormal, currentPath);
     }
   }
 }
 
-// void SobelFilter::followThisEdge(const int & row, const int & col, const int & gradientNormal, const int & MAX_DEPTH){
 void SobelFilter::followThisEdge(const int & row, 
                                  const int & col, 
                                  const int & gradientNormal, 
                                  QVector<QPoint> & currentPath){
 
-	// QVector<QPoint> currentPath = QVector<QPoint> ();
-	// QPoint currentPoint = QPoint(row, col); // Start of this Path
-  // currentPath << currentPoint;
-  // currentPath << QPoint(row, col); // Start of this Path
-  
 	int iterations = 0;                  
   int rowStart = 0;                    
 	int colStart = 0;                    //  Search Range
@@ -450,8 +412,6 @@ void SobelFilter::followThisEdge(const int & row,
   int colIncr = 0;                     //  o x x x x x o    x -> depth two
   int rowIdx = 0;                      //  o o o o o o o    o -> depth tree
   int colIdx = 0;
-  // int magnitude = 0;
-  // int normal = 0;
   
   QVector<bool> edgePointsFound = QVector<bool>(MAX_DEPTH+1, false);
   /**
@@ -469,7 +429,6 @@ void SobelFilter::followThisEdge(const int & row,
 	switch (gradientNormal) {
     case 270:{
       for(int depth = 1; depth <= MAX_DEPTH; ++depth){
-        // /*2*/cout << "      Depth: " << depth <<endl;
         // tour of sides points              //  Search Range
         if (depth > 1) {                     //        m          |            m      
           rowStart = row + 1;                // -> x       x <-   |   -> o           o <-
@@ -477,13 +436,8 @@ void SobelFilter::followThisEdge(const int & row,
           colStart = col - depth;            //                   |      o o o o o o o
           colIncr = depth * 2;               //
           colEnd = colStart + colIncr;
-          // /*2*/cout << "        * tour of sides points:" << endl;
-          // /*2*/cout << "          inicio (" << rowStart << "," << colStart << ")" <<  "final (" << rowEnd << "," << colEnd << ")";
-          // /*2*/cout << " colIcr: " << colIncr <<" rowIncr: " << 1 << endl;
           for(int rowIdx = rowStart; rowIdx < rowEnd; ++rowIdx){
             for(int colIdx = colStart; colIdx <= colEnd; colIdx += colIncr){
-              // /*2*/cout << "          rowIdx: " << rowIdx <<"  colIdx: " << colIdx; 
-              // /*2*/cout << "  findNeighboringEdgePoint("<< rowIdx <<", "<< colIdx <<", " << gradientNormal <<", " << depth <<", currentPath, edgePointsFound)" << endl;
               findNeighboringEdgePoint(rowIdx, colIdx, gradientNormal, depth, currentPath, edgePointsFound);
             }
           }
@@ -498,12 +452,7 @@ void SobelFilter::followThisEdge(const int & row,
         rowIncr = 0;
         rowIdx = rowStart;
         
-        // /*2*/cout << "        * tour of row points:" << endl;
-        // /*2*/cout << "           inicio (" << rowStart << "," << colStart << ")" <<  "final (" << rowEnd << "," << colEnd << ")";
-        // /*2*/cout << " colIcr: " << colIncr <<" rowIncr: " << rowIncr << endl;
         for(int colIdx = colStart; colIdx < colEnd; colIdx += colIncr){
-          // /*2*/cout << "           rowIdx: " << rowIdx <<"  colIdx: " << colIdx; 
-          // /*2*/cout << "  findNeighboringEdgePoint("<< rowIdx <<", "<< colIdx <<", " << gradientNormal <<", " << depth <<", currentPath, edgePointsFound)" << endl;
           findNeighboringEdgePoint(rowIdx, colIdx, gradientNormal, depth, currentPath, edgePointsFound);
         }
         
@@ -514,7 +463,6 @@ void SobelFilter::followThisEdge(const int & row,
     }
     case 90: {
       for(int depth = 1; depth <= MAX_DEPTH; ++depth){
-        // /*2*/cout << "      Depth: " << depth <<endl;
         // tour of sides points              
         if (depth > 1) {                     
           rowStart = row - 1;                
@@ -522,13 +470,8 @@ void SobelFilter::followThisEdge(const int & row,
           colStart = col - depth;            
           colIncr = depth * 2;               
           colEnd = colStart + colIncr;       
-          // /*2*/cout << "        * tour of sides points:" << endl;
-          // /*2*/cout << "          inicio (" << rowStart << "," << colStart << ")" <<  "final (" << rowEnd << "," << colEnd << ")";
-          // /*2*/cout << " colIcr: " << colIncr <<" rowIncr: " << -1 << endl;
           for(int rowIdx = rowStart; rowIdx > rowEnd; --rowIdx){
             for(int colIdx = colStart; colIdx <= colEnd; colIdx += colIncr){
-              // /*2*/cout << "          rowIdx: " << rowIdx <<"  colIdx: " << colIdx; 
-              // /*2*/cout << "  findNeighboringEdgePoint("<< rowIdx <<", "<< colIdx <<", " << gradientNormal <<", " << depth <<", currentPath, edgePointsFound)" << endl;
               findNeighboringEdgePoint(rowIdx, colIdx, gradientNormal, depth, currentPath, edgePointsFound);
             }
           }
@@ -543,12 +486,7 @@ void SobelFilter::followThisEdge(const int & row,
         rowIncr = 0;
         rowIdx = rowStart;
         
-        // /*2*/cout << "        * tour of row points:" << endl;
-        // /*2*/cout << "           inicio (" << rowStart << "," << colStart << ")" <<  "final (" << rowEnd << "," << colEnd << ")";
-        // /*2*/cout << " colIcr: " << colIncr <<" rowIncr: " << rowIncr << endl;
         for(int colIdx = colStart; colIdx < colEnd; colIdx += colIncr){
-          // /*2*/cout << "           rowIdx: " << rowIdx <<"  colIdx: " << colIdx; 
-          // /*2*/cout << "  findNeighboringEdgePoint("<< rowIdx <<", "<< colIdx <<", " << gradientNormal <<", " << depth <<", currentPath, edgePointsFound)" << endl;
           findNeighboringEdgePoint(rowIdx, colIdx, gradientNormal, depth, currentPath, edgePointsFound);
         }
         
@@ -559,7 +497,6 @@ void SobelFilter::followThisEdge(const int & row,
     }
     case 360: {
       for(int depth = 1; depth <= MAX_DEPTH; ++depth){
-        // /*2*/cout << "      Depth: " << depth <<endl;
         // tour of sides points              //  Search Range
         if (depth > 1) {                     //        m          |            m      
           colStart = col + 1;                // -> x       x <-   |   -> o           o <-
@@ -567,13 +504,8 @@ void SobelFilter::followThisEdge(const int & row,
           rowStart = row - depth;            //                   |      o o o o o o o
           rowIncr = depth * 2;               //
           rowEnd = rowStart + rowIncr;
-          // /*2*/cout << "        * tour of sides points:" << endl;
-          // /*2*/cout << "          inicio (" << colStart << "," << rowStart << ")" <<  "final (" << colEnd << "," << rowEnd << ")";
-          // /*2*/cout << " rowIcr: " << rowIncr <<" colIncr: " << 1 << endl;
           for(int colIdx = colStart; colIdx < colEnd; ++colIdx){
             for(int rowIdx = rowStart; rowIdx <= rowEnd; rowIdx += rowIncr){
-              // /*2*/cout << "          colIdx: " << colIdx <<"  rowIdx: " << rowIdx; 
-              // /*2*/cout << "  findNeighboringEdgePoint("<< colIdx <<", "<< rowIdx <<", " << gradientNormal <<", " << depth <<", currentPath, edgePointsFound)" << endl;
               findNeighboringEdgePoint(rowIdx, colIdx, gradientNormal, depth, currentPath, edgePointsFound);
             }
           }
@@ -588,12 +520,7 @@ void SobelFilter::followThisEdge(const int & row,
         colIncr = 0;
         colIdx = colStart;
         
-        // /*2*/cout << "        * tour of col points:" << endl;
-        // /*2*/cout << "           inicio (" << colStart << "," << rowStart << ")" <<  "final (" << colEnd << "," << rowEnd << ")";
-        // /*2*/cout << " rowIcr: " << rowIncr <<" colIncr: " << colIncr << endl;
         for(int rowIdx = rowStart; rowIdx < rowEnd; rowIdx += rowIncr){
-          // /*2*/cout << "           colIdx: " << colIdx <<"  rowIdx: " << rowIdx; 
-          // /*2*/cout << "  findNeighboringEdgePoint("<< colIdx <<", "<< rowIdx <<", " << gradientNormal <<", " << depth <<", currentPath, edgePointsFound)" << endl;
           findNeighboringEdgePoint(rowIdx, colIdx, gradientNormal, depth, currentPath, edgePointsFound);
         }
         
@@ -604,7 +531,6 @@ void SobelFilter::followThisEdge(const int & row,
     }
     case 180: {
       for(int depth = 1; depth <= MAX_DEPTH; ++depth){
-        // /*2*/cout << "      Depth: " << depth <<endl;
         // tour of sides points              //  Search Range
         if (depth > 1) {                     //        m          |            m      
           colStart = col - 1;                // -> x       x <-   |   -> o           o <-
@@ -612,13 +538,8 @@ void SobelFilter::followThisEdge(const int & row,
           rowStart = row - depth;            //                   |      o o o o o o o
           rowIncr = depth * 2;               //
           rowEnd = rowStart + rowIncr;
-          // /*2*/cout << "        * tour of sides points:" << endl;
-          // /*2*/cout << "          inicio (" << colStart << "," << rowStart << ")" <<  "final (" << colEnd << "," << rowEnd << ")";
-          // /*2*/cout << " rowIcr: " << rowIncr <<" colIncr: " << 1 << endl;
           for(int colIdx = colStart; colIdx > colEnd; --colIdx){
             for(int rowIdx = rowStart; rowIdx <= rowEnd; rowIdx += rowIncr){
-              // /*2*/cout << "          colIdx: " << colIdx <<"  rowIdx: " << rowIdx; 
-              // /*2*/cout << "  findNeighboringEdgePoint("<< colIdx <<", "<< rowIdx <<", " << gradientNormal <<", " << depth <<", currentPath, edgePointsFound)" << endl;
               findNeighboringEdgePoint(rowIdx, colIdx, gradientNormal, depth, currentPath, edgePointsFound);
             }
           }
@@ -633,12 +554,7 @@ void SobelFilter::followThisEdge(const int & row,
         colIncr = 0;
         colIdx = colStart;
         
-        // /*2*/cout << "        * tour of col points:" << endl;
-        // /*2*/cout << "           inicio (" << colStart << "," << rowStart << ")" <<  "final (" << colEnd << "," << rowEnd << ")";
-        // /*2*/cout << " rowIcr: " << rowIncr <<" colIncr: " << colIncr << endl;
         for(int rowIdx = rowStart; rowIdx < rowEnd; rowIdx += rowIncr){
-          // /*2*/cout << "           colIdx: " << colIdx <<"  rowIdx: " << rowIdx; 
-          // /*2*/cout << "  findNeighboringEdgePoint("<< colIdx <<", "<< rowIdx <<", " << gradientNormal <<", " << depth <<", currentPath, edgePointsFound)" << endl;
           findNeighboringEdgePoint(rowIdx, colIdx, gradientNormal, depth, currentPath, edgePointsFound);
         }
         
@@ -668,14 +584,12 @@ void SobelFilter::followThisEdge(const int & row,
     }
   }
   
-	// edgePaths->append(currentPath);
 }
 
 void SobelFilter::findNeighboringEdgePoint(const int & row, 
                                            const int & col, 
                                            const int & gradientNormal,
                                            const int & depth,
-                                           // const int & MAX_DEPTH,
                                            QVector<QPoint> & currentPath,
                                            QVector<bool> & edgePointsFound){
   int lowRowLimit = MAX_DEPTH;
@@ -685,29 +599,16 @@ void SobelFilter::findNeighboringEdgePoint(const int & row,
   int magnitude = nonMaximalMagnitudes->getAt(row, col);
   int normal = calculateNormal(gradientAngles->getAt(row, col));
   
-  // /*3*/cout << "             " << normal <<" == "<< gradientNormal<< " && ";
-  // /*3*/cout << lowThreshold << " <= " << magnitude << " <= " << highThreshold <<"?  ";
   if(normal == gradientNormal && magnitude <= highThreshold && magnitude >= lowThreshold){
-    // /*3*/cout<<"   SI"<<endl;
-    // /*3*/cout<<"                 hysteresisImage(), currentPath << Qpoint()  en el punto ("<<row<<","<<col << ") "<<endl;
     hysteresisImage->setPixel(row, col, edgeColor);  // is edge
-    // currentPath << QPoint(row, col);                 // save the point in the current path
     edgePointsFound[0] = true;                       // found a point of edge
     edgePointsFound[depth] = true;                   // depth at wich found the point
     if(row >= lowRowLimit && row <= highRowLimit &&
        col >= lowColLimit && col <= highColLimit)
     {
-      // /*3*/cout<<"                 followThisEdge("<<row<<","<<col << ", currentPath)  -- Llamado recursivo"<<endl;
       followThisEdge(row, col, normal, currentPath);  // continue with the search 
     }
-    else{
-      // /*3*/cout<<"                  -- PARADA : coordenada fuera de los lImites: "<<"(" << lowRowLimit << "," << lowColLimit << ")" <<"(" << highRowLimit << "," << highColLimit << ")"<<endl;
-      // currentPath << QPoint(row, col);
-    }
     
-  }
-  else{
-    // /*3*/cout<<"   NO"<<endl;
   }
 }
 
