@@ -3,12 +3,13 @@
 
 #include <iostream>
 #include <cmath>
+#include <fstream>
 #include <QPoint>
 #include <QVector>
 #include "Image.h"
 #include "ConvolutionOperation.h"
 #include "utils/Matrix.h"
-#include "utils/utils.h"    
+#include "utils/utils.h"
 
 using namespace std;
 
@@ -40,40 +41,26 @@ class SobelFilter {
 		void createMasks();
 		void initMatrices(Image * image);
 		int quantizeAngle(double angle);
-		void setValues(	const int & row, 
-										const int & col,
-										const double & magnitudeX,
-										const double & magnitudeY,
-										const int & threshold);
+		void setValues(const int & row, 
+                   const int & col,
+                   const double & magnitudeX,
+                   const double & magnitudeY,
+                   const int & threshold);
 		
 		void nonMaximalSuppression(const int & sideNeighbors);
 		bool nonMaximalSuppressionOperation(const int & row, const int & col, const int & sideNeighbors);
 		Image * constructColorImage(Image * originImage);
 		void hysteresis();
-		// void checkForEdgePoints(const int & gradientNormal, const int & maxDepth);
 		void checkForEdgePoints(const int & gradientNormal);
     int calculateNormal(const int & angle);
-    // void verifyThisPoint(const int & row, 
-                         // const int & col, 
-                         // const int & gradientNormal,
-                         // const int & maxDepth);
     void verifyThisPoint(const int & row, 
                          const int & col, 
-                         const int & gradientNormal);
-		// void followThisEdge(const int & row, 
-                        // const int & col,
-                        // const int & gradientNormal,
-                        // const int & maxDepth);
+                         const int & gradientNormal,
+                         QVector<QPoint> & currentPath);
     void followThisEdge(const int & row, 
                         const int & col,
-                        const int & gradientNormal);
-    // void SobelFilter::findNeighboringEdgePoint(const int & row, 
-                                               // const int & col, 
-                                               // const int & gradientNormal,
-                                               // const int & depth,
-                                               // const int & maxDepth,
-                                               // QVector<QPoint> & currentPath,
-                                               // QVector<bool> & edgePointsFound);
+                        const int & gradientNormal,
+                        QVector<QPoint> & currentPath);
     void SobelFilter::findNeighboringEdgePoint(const int & row, 
                                                const int & col, 
                                                const int & gradientNormal,
@@ -81,37 +68,70 @@ class SobelFilter {
                                                QVector<QPoint> & currentPath,
                                                QVector<bool> & edgePointsFound);
 		
-	public:
-		SobelFilter(const int & lowThreshold, const int & highThreshold, const int & edgeColor = 255, const int & backgroundColor = 0);
+    
+    
+    
+    public:
+    /**
+    *  Constructor de clase
+    */
+ 		SobelFilter(const int & lowThreshold, 
+                const int & highThreshold,
+                const int & edgeColor = 255,
+                const int & backgroundColor = 0);
 		virtual ~SobelFilter();
     
     static const int MAX_DEPTH;
 		
+    
+    /**
+     * Ejecuta el filtro sobre la imagen image.  Retorna un objeto Image, el cual es una imagen
+     * binarizada de acuerdo al umbral threshold
+     */
 		Image sobel(Image * image, const int & threshold);
-		
+    
+    /**
+     *  MEtodos de acceso a miebros privados de la clase
+     *  Acceso a las matrices producto del proceso
+     */
+    
 		Matrix<double> * getVerticalMask();
-		void setVerticalMask(Matrix<double> * verticalMaskValue);
 		Matrix<double> * getHorizontalMask();
-		void setHorizontalMask(Matrix<double> * horizontalMaskValue);
 		Matrix<double> * getVerticalMatrix();
-		void setVerticalMatrix(Matrix<double> * verticalMatrixValue);
 		Matrix<double> * getHorizontalMatrix();
-		void setHorizontalMatrix(Matrix<double> * horizontalMatrixValue);
 		Matrix<int> * getGradientMagnitudes();
-		void setGradientMagnitudes(Matrix<int> * gradientMagnitudesValue);
-		Matrix<int> * getGradientAngles();
-		void setGradientAngles(Matrix<int> * gradientAnglesValue);
+		Matrix<int> * getGradientAngles();  // Matriz de Angulos
 		Matrix<int> * getNonMaximalMagnitudes();
-		void setNonMaximalMagnitudes(Matrix<int> * nonMaximalMagnitudesValue);
 		Matrix<int> * getNonMaximalAngles();
+    
+		void setVerticalMask(Matrix<double> * verticalMaskValue);
+		void setHorizontalMask(Matrix<double> * horizontalMaskValue);
+		void setVerticalMatrix(Matrix<double> * verticalMatrixValue);
+		void setHorizontalMatrix(Matrix<double> * horizontalMatrixValue);
+		void setGradientMagnitudes(Matrix<int> * gradientMagnitudesValue);
+		void setGradientAngles(Matrix<int> * gradientAnglesValue);
+		void setNonMaximalMagnitudes(Matrix<int> * nonMaximalMagnitudesValue);
 		void setNonMaximalAngles(Matrix<int> * nonMaximalAnglesValue);
 		
+    /**
+    *  Acceso a las imagenes proucto del proceso
+    */
 		Image * getSobelImage();
 		Image * getNonMaximalImage();
 		Image * getHysteresisImage();
 		
+    /**
+    *   Crea una imagen de Angulos a color, a partir de la imagen de un estado 
+    *   del proceso:
+    *   SobelFilter::SOBEL, SobelFilter::NON_MAXIMAL o SobelFilter::HYSTERESIS
+    */
 		Image * createAnglesColorImage(process_stage_t processStageForImage);
     
+    /**
+     *  Guarda en else el archivo fielName los puntos de cada camino trazado
+     *  al seguir los bordes
+     */
+    void saveEdgePaths(const char * fileName);
 };
 #endif        //  #ifndef SOBELFILTER_H
 

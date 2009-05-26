@@ -13,92 +13,45 @@ double gauss(int x, int y);
 int main( int argc, char * argv[] )
 {
 	
-	/*
-	// FUNCIONES DE LA CLASE IMAGEN
-	// ---------------------------------------------------------------------------------
-	// Lectura archivos ppm
-	// Image * imagenPpm = new Image("data/Lena.ppm");
-	Image * imagenPpm = new Image(argv[1]);
+	// Ejemplo de la utilizacion de la clase SobelFilter:
 	
-	// Escritura de imagen y conversiOn de color a grises
-	imagenPpm->save("data/01_ColorAGrises.pgm", Image::P2);
-	
-	
-	Image * imagen = new Image(argv[2]);
-	// FUNCIONES CLASE HISTOGRAM
-	// ---------------------------------------------------------------------------------
-	// Calculo de histograma de una imagen
-	Histogram * hist = new Histogram(imagen);
-	cout << "Calculo de histograma de una imagen" << endl;
-	
-	// GeneraciOn de imagen de histograma
-	Image imgHistograma = hist->paintHistogram();
-	imgHistograma.save("data/02_histograma.pgm");
-	cout << "Generaci�n de imagen de histograma" << endl;
-	
-	// EcualizaciOn de una imagen a travEs de su histograma
-	Image imgEcualizada = hist->equalize(imagen);
-	imgEcualizada.save("data/03_Ecualizada.pgm");
-	cout << "Ecualizaci�n de una imagen a travEs de su histograma" << endl;
-	
-	// FUNCIONES CLASE SEGMENTATION
-	// ---------------------------------------------------------------------------------
-	// C�lculo de umbral por m�todo Isodata 
-	int thresholdIsodata = Segmentation::thresholdingIsodata(imagen);
-	cout << "// C�lculo de umbral por mEtodo Isodata" << endl;
-	
-	// C�lculo de umbral por mEtodo Otsu
-	int thresholdOtsu = Segmentation::thresholdingOtsu(imagen);
-	cout << "// C�lculo de umbral por m�todo Otsu" << endl;
-	
-	// Segmentaci�n con umbral Isodata
-	Image imgSegmentadaIsodata = Segmentation::segmentate((*imagen), thresholdIsodata);
-	imgSegmentadaIsodata.save("data/04_SegmentedIsodata.pgm");
-	cout << "// Segmentaci�n con umbral Isodata" << endl;
-	
-	// Segmentaci�n con umbral Otsu
-	Image imgSegmentadaOtsu = Segmentation::segmentate((*imagen), thresholdOtsu);
-	imgSegmentadaOtsu.save("data/05_SegmentedOtsu.pgm");
-	cout << "// SegmentaciOn con umbral Otsu" << endl;
-	*/
-	
-	// Filtros paso bajo
-	// Filtro media
-	// Image * imagen = new Image(argv[1]);
-	// Image imgFilterd = LowPassFilters::mean(imagen);
-	// imgFilterd.save("data/06_MeanFiltered.pgm");
-
-	// Matrix<double> mask = LowPassFilters::createMeanMask(3);
-	// cout<<mask<<endl; 
-	
-	// int x = 0;
-	// int y = 0;
-	
-	// while (x != 99 && y != 99){
-	// 	cout << "x = ";
-	// 	cin >> x;
-	// 	cout << "y = ";
-	// 	cin >> y;
-		
-	// 	if (x != 99 || y != 99) cout<<"gauss: "<<gauss(x,y)<<endl;
-	// }
-	
-	SobelFilter sobel = SobelFilter(40,128);
-	Image * img = new Image(argv[1]); 
+  // creacion del ojeto
+	SobelFilter sobel = SobelFilter(20,185);
+	// Imagen original
+  Image * img = new Image(argv[1]);
+  // Aplicación filtro a la imagen
 	Image filtered = sobel.sobel(img,80);
-	
+	// Se guarda la imagen filtrada en disco
 	filtered.save("data/07_SobelFiltered.pgm");
-	// Image * imgSobel = sobel.getSobelImage();	
+	// Puede accederse a la misma imagen de esta manera:
+  // Image * imgSobel = sobel.getSobelImage();	
+  
+  // Creación de imágenes de angulos a color and partir de las imagenes
+  // generadas durante el proceso:
+  // imagen de angulos sobel (primer paso)
 	Image * colorSobel = sobel.createAnglesColorImage(SobelFilter::SOBEL);
-	// imgSobel->save("data/07_SobelFiltered_2.pgm");
 	colorSobel->save("data/08_ColorSobelFiltered.pgm");
+  
+  // Se guarda la imagen producto de NonMaximal Suppression en disco
 	Image * imgNonMaximal = sobel.getNonMaximalImage();
 	imgNonMaximal->save("data/09_nonMaximalFiltered.pgm");
 	
+  // Se crea y guarda la imagen deangulos a color 
+  // producto de NonMaximal Suppression en disco
 	Image * colorNonMaximal = sobel.createAnglesColorImage(SobelFilter::NON_MAXIMAL);
 	colorNonMaximal->save("data/10_colorNonMaximalFiltered.pgm");
   
-  // (sobel.getGradientAngles())->save("data/matrix.txt");
+  // Se guardan los caminos en disco
+  // sobel.saveEdgePaths("data/paths.txt");
+  
+  // Se otiene y guarda la imagen producto de Hysteresis en disco
+  // IMAGEN PARCIAL --- NO DEFINITIVA
+  Image * imgHysteresis = sobel.getHysteresisImage();
+  imgHysteresis->save("data/11_hysteresisFiltered.pgm");
+  
+  // Se guarda en disco un archivo texto con la matriz de Angulos
+  // Cualquier matriz se puede gauradar en disco
+  sobel.getGradientAngles()->save("data/matrix.txt");
   
 	return 0;//status
 }

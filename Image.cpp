@@ -289,7 +289,7 @@ int Image::getPixel(const int & x, const int & y)
 
 }
 
-void Image::getPixel(const int & x, const int & y, int & green, int & red, int & blue)
+void Image::getPixel(const int & x, const int & y, int & red, int & green, int & blue)
 {
 	if ( ((x < 0) || (x > rows)) || (((y < 0) || (y > cols))) )	{
 		cerr<<" Image::getPixel:: IndexOutOfBounds ["<< x<<"]["<< y<<"] in ["<<rows<<"]["<<cols<<"]"<<endl;
