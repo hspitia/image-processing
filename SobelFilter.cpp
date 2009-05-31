@@ -228,7 +228,7 @@ void SobelFilter::setValues(	const int & row,
 	gradientAngles->setAt(row, col, angle);
 	
 	if(magnitude >= threshold) {
-		// // cout << "DEBUG - dentro setValues" << endl<<"magnitude "<<magnitude<<", threshold "<<threshold<<endl;
+		// // // /*1*/cout << "DEBUG - dentro setValues" << endl<<"magnitude "<<magnitude<<", threshold "<<threshold<<endl;
 		sobelImage->setPixel(row, col, edgeColor);
 		
 	}
@@ -314,9 +314,10 @@ void SobelFilter::hysteresis(){
 	hysteresisMagnitudes = new Matrix<int> (*nonMaximalMagnitudes);
 	edgePaths = new QVector< QLinkedList<QPoint> >();
   
-  cout << "Bordes en dirección: 270"<< endl;
+  // /*1*/cout << "Bordes en dirección: 270 y 90"<< endl;
+  
 	checkForEdgePoints(270);
-  // checkForEdgePoints(90);
+	checkForEdgePoints(90);
   // checkForEdgePoints(360);
   // checkForEdgePoints(180);
   
@@ -337,9 +338,7 @@ void SobelFilter::checkForEdgePoints(const int & gradientNormal){
     for(int rowIdx = rowStart; rowIdx < rowEnd; ++rowIdx){
       for(int colIdx = colStart; colIdx < colEnd; ++colIdx){
         verifyThisPoint(rowIdx, colIdx, gradientNormal);
-        // cout << "(" << rowIdx << "," << colIdx << ")";
       }
-      // cout << endl;
     }
   }
 
@@ -391,13 +390,13 @@ void SobelFilter::verifyThisPoint(const int & row,
     int magnitude = nonMaximalMagnitudes->getAt(row, col);
     
     if(magnitude > 0 && magnitude < lowThreshold) { //No edge
-      // cout << "\t\tno " << endl;
+      // // /*1*/cout << "\t\tno " << endl;
       hysteresisMagnitudes->setAt(row, col, 0);
       hysteresisImage->setPixel(row, col, backgroundColor);
     }
     else if(magnitude > highThreshold && !isPointMarked(QPoint(row,col))){ // Edge point not included in a path previously
-      cout << "(" << row << "," << col << ") - " << "normal: " << normal<< "  ok"<<endl;
-      cout << "\tmagnitude: " << magnitude  <<" edge? (" << magnitude << " > " << highThreshold << ")   SI" <<endl;
+      // /*1*/cout << "(" << row << "," << col << ") - " << "normal: " << normal<< "  ok"<<endl;
+      // /*1*/cout << "\tmagnitude: " << magnitude  <<" edge? (" << magnitude << " > " << highThreshold << ")   SI" <<endl;
       hysteresisImage->setPixel(row, col, edgeColor);
       newPath = followThisEdge(row, col, gradientNormal);
       if(!newPath.isEmpty()) edgePaths->append(newPath);
@@ -419,12 +418,12 @@ void SobelFilter::followEdge270(const QPoint & startPoint, QLinkedList<QPoint> &
   int highLimitCol = nonMaximalMagnitudes->getCols() - 1 - MAX_DEPTH;
   
   QPoint currentPoint = QPoint(startPoint.x(), startPoint.y());
-  cout << "\t\t\tfollowEdge270"<<"(" << startPoint.x() << "," << startPoint.y() << ")" << endl;
+  // /*1*/cout << "\t\t\tfollowEdge270"<<"(" << startPoint.x() << "," << startPoint.y() << ")" << endl;
   while( !stop ){
     QPoint * maxPoint = NULL;
     
     for(int depth = 1; depth <= MAX_DEPTH; ++depth){
-      cout << "\t\t\t\tDepth: " << depth << endl;
+      // /*1*/cout << "\t\t\t\tDepth: " << depth << endl;
       rowIdx = currentPoint.x() + depth;
       colStart = currentPoint.y() - depth;
       colEnd = colStart + (depth * 2);
@@ -432,20 +431,12 @@ void SobelFilter::followEdge270(const QPoint & startPoint, QLinkedList<QPoint> &
       maxPoint = NULL;
       
       for(int colIdx = colStart; colIdx <= colEnd; ++colIdx){
-        // normal = calculateNormal(gradientAngles->getAt(rolIdx, colIdx);
-        // magnitude = nonMaximalMagnitudes->getAt(rowIdx, colIdx);
-        // if(normal == 270 && magnitude >= lowThreshold){
-          // if(magnitude > maxMagnitude){
-            // maxMagnitude = magnitude;
-            // maxPoint = new QPoint(rowIdx, colIdx);
-          // }
-        // }
-        cout << "\t\t\t\t\t" "(" << rowIdx << "," << colIdx << ") = ";
+        // /*1*/cout << "\t\t\t\t\t" "(" << rowIdx << "," << colIdx << ") = ";
         neighborCheckPoint(QPoint(rowIdx, colIdx), 270, maxMagnitude, maxPoint);
-        cout << endl;
+        // /*1*/cout << endl;
       }
       if(maxPoint != NULL){
-        cout << "\t\t\t\t\t\tmaxPoint: " << "(" << maxPoint->x() << "," << maxPoint->y() << "),  maxMagnitude: " << maxMagnitude  <<endl;
+        // /*1*/cout << "\t\t\t\t\t\tmaxPoint: " << "(" << maxPoint->x() << "," << maxPoint->y() << "),  maxMagnitude: " << maxMagnitude  <<endl;
         if(depth == 1 && !isPointMarked((*maxPoint))) {
           newPath.append( *maxPoint );
           hysteresisImage->setPixel(maxPoint->x(), maxPoint->y(), edgeColor);  // the neighbor point is edge
@@ -456,7 +447,7 @@ void SobelFilter::followEdge270(const QPoint & startPoint, QLinkedList<QPoint> &
         break;  // Point found, then the search of neighbors end
       }
       else {
-        cout << "\t\t\t\t\t\tmaxPoint: " << "NULL,   maxMagnitude: " << maxMagnitude  <<endl;
+        // /*1*/cout << "\t\t\t\t\t\tmaxPoint: " << "NULL,   maxMagnitude: " << maxMagnitude  <<endl;
       }
     } // end for
     
@@ -465,7 +456,7 @@ void SobelFilter::followEdge270(const QPoint & startPoint, QLinkedList<QPoint> &
        maxPoint->y() >= lowLimitCol && maxPoint->y() <= highLimitCol)
     { 
       currentPoint = (*maxPoint); // Point found is now the start of the next search
-      cout << "\t\t\tNuevo punto de partida: " << "(" << currentPoint.x() << "," << currentPoint.y() << ")" << endl;
+      // /*1*/cout << "\t\t\tNuevo punto de partida: " << "(" << currentPoint.x() << "," << currentPoint.y() << ")" << endl;
     }
     else{
       stop = true; // No point was found; this edge end
@@ -473,6 +464,134 @@ void SobelFilter::followEdge270(const QPoint & startPoint, QLinkedList<QPoint> &
     
   } // end while
 }// end followEdge270()
+
+void SobelFilter::followEdge90(const QPoint & startPoint, QLinkedList<QPoint> & newPath){
+	
+  int colStart = 0;
+	int colEnd = 0;
+  int rowIdx = 0;
+  bool stop = false;
+  int lowLimitRow = MAX_DEPTH;
+  int lowLimitCol = MAX_DEPTH;
+  int highLimitRow = nonMaximalMagnitudes->getRows() - 1 - MAX_DEPTH;
+  int highLimitCol = nonMaximalMagnitudes->getCols() - 1 - MAX_DEPTH;
+  
+  QPoint currentPoint = QPoint(startPoint.x(), startPoint.y());
+  // /*1*/cout << "\t\t\tfollowEdge90"<<"(" << startPoint.x() << "," << startPoint.y() << ")" << endl;
+  while( !stop ){
+    QPoint * maxPoint = NULL;
+    
+    for(int depth = 1; depth <= MAX_DEPTH; ++depth){
+      // /*1*/cout << "\t\t\t\tDepth: " << depth << endl;
+      rowIdx = currentPoint.x() - depth;
+      colStart = currentPoint.y() - depth;
+      colEnd = colStart + (depth * 2);
+      int maxMagnitude = 0;
+      maxPoint = NULL;
+      
+      for(int colIdx = colStart; colIdx <= colEnd; ++colIdx){
+        // /*1*/cout << "\t\t\t\t\t" "(" << rowIdx << "," << colIdx << ") = ";
+        neighborCheckPoint(QPoint(rowIdx, colIdx), 270, maxMagnitude, maxPoint);
+        // /*1*/cout << endl;
+      }
+      if(maxPoint != NULL){
+        // /*1*/cout << "\t\t\t\t\t\tmaxPoint: " << "(" << maxPoint->x() << "," << maxPoint->y() << "),  maxMagnitude: " << maxMagnitude  <<endl;
+        if(depth == 1 && !isPointMarked((*maxPoint))) {
+          newPath.append( *maxPoint );
+          hysteresisImage->setPixel(maxPoint->x(), maxPoint->y(), edgeColor);  // the neighbor point is edge
+        }
+        else {
+          linkPoints(startPoint, maxPoint, newPath, 270); // link points between the maxPoint and start 
+        }
+        break;  // Point found, then the search of neighbors end
+      }
+      else {
+        // /*1*/cout << "\t\t\t\t\t\tmaxPoint: " << "NULL,   maxMagnitude: " << maxMagnitude  <<endl;
+      }
+    } // end for
+    
+    if(maxPoint != NULL && 
+       maxPoint->x() >= lowLimitRow && maxPoint->x() <= highLimitRow &&
+       maxPoint->y() >= lowLimitCol && maxPoint->y() <= highLimitCol)
+    { 
+      currentPoint = (*maxPoint); // Point found is now the start of the next search
+      // /*1*/cout << "\t\t\tNuevo punto de partida: " << "(" << currentPoint.x() << "," << currentPoint.y() << ")" << endl;
+    }
+    else{
+      stop = true; // No point was found; this edge end
+    }
+    
+  } // end while
+}// end followEdge90()
+
+/***************************************************************************************/
+void SobelFilter::followEdgeVertical(const int & normalGradient, const QPoint & startPoint, QLinkedList<QPoint> & newPath){
+	
+  int colStart = 0;
+	int colEnd = 0;
+  int rowIdx = 0;
+  bool stop = false;
+  int lowLimitRow = MAX_DEPTH;
+  int lowLimitCol = MAX_DEPTH;
+  int highLimitRow = nonMaximalMagnitudes->getRows() - 1 - MAX_DEPTH;
+  int highLimitCol = nonMaximalMagnitudes->getCols() - 1 - MAX_DEPTH;
+  
+  QPoint currentPoint = QPoint(startPoint.x(), startPoint.y());
+  /*0*/cout << "\t\t\tfollowEdgeVertical: "<< normalGradient <<" (" << startPoint.x() << "," << startPoint.y() << ")" << endl;
+  while( !stop ){
+    QPoint * maxPoint = NULL;
+    
+    for(int depth = 1; depth <= MAX_DEPTH; ++depth){
+      // /*1*/cout << "\t\t\t\tDepth: " << depth << endl;
+      
+      /**/
+      rowIdx = currentPoint.x() + depth; // For normal 270
+      if(normalGradient == 90) rowIdx = currentPoint.x() - depth;
+      
+      colStart = currentPoint.y() - depth;
+      colEnd = colStart + (depth * 2);
+      int maxMagnitude = 0;
+      maxPoint = NULL;
+      
+      for(int colIdx = colStart; colIdx <= colEnd; ++colIdx){
+        // /*1*/cout << "\t\t\t\t\t" "(" << rowIdx << "," << colIdx << ") = ";
+        neighborCheckPoint(QPoint(rowIdx, colIdx), normalGradient, maxMagnitude, maxPoint);
+        // /*1*/cout << endl;
+      }
+      if(maxPoint != NULL){
+        // /*1*/cout << "\t\t\t\t\t\tmaxPoint: " << "(" << maxPoint->x() << "," << maxPoint->y() << "),  maxMagnitude: " << maxMagnitude  <<endl;
+        if(depth == 1 && !isPointMarked((*maxPoint))) {
+          newPath.append( *maxPoint );
+          hysteresisImage->setPixel(maxPoint->x(), maxPoint->y(), edgeColor);  // the neighbor point is edge
+        }
+        else {
+          linkPoints(startPoint, maxPoint, newPath, 270); // link points between the maxPoint and start 
+        }
+        break;  // Point found, then the search of neighbors end
+      }
+      else {
+        // /*1*/cout << "\t\t\t\t\t\tmaxPoint: " << "NULL,   maxMagnitude: " << maxMagnitude  <<endl;
+      }
+    } // end for
+    
+    if(maxPoint != NULL && 
+       maxPoint->x() >= lowLimitRow && maxPoint->x() <= highLimitRow &&
+       maxPoint->y() >= lowLimitCol && maxPoint->y() <= highLimitCol)
+    { 
+      currentPoint = (*maxPoint); // Point found is now the start of the next search
+      // /*1*/cout << "\t\t\tNuevo punto de partida: " << "(" << currentPoint.x() << "," << currentPoint.y() << ")" << endl;
+    }
+    else{
+      stop = true; // No point was found; this edge end
+    }
+    
+  } // end while
+}// end followEdge90()
+
+
+/***************************************************************************************/
+
+
 
 void SobelFilter::linkPoints(const QPoint & startPoint,
                              QPoint * maxPoint,
@@ -484,13 +603,12 @@ void SobelFilter::linkPoints(const QPoint & startPoint,
   int rowIdx = 0;
   int colIdx = 0;
   int colIncr = 0;
+  int rowIncr = 0;
   QLinkedList<QPoint>::iterator iter;
   
-  // for (i = list.begin(); i != list.end(); ++i)
-     // cout << *i << endl;
   
   switch (gradientNormal) {
-    case 270:{
+    case 270: case 90: {
       if(!isPointMarked((*maxPoint))){
         newPath.append(QPoint(maxPoint->x(), maxPoint->y()));
         hysteresisImage->setPixel(maxPoint->x(), maxPoint->y(), edgeColor);
@@ -501,18 +619,47 @@ void SobelFilter::linkPoints(const QPoint & startPoint,
       
       if(colIdx < startPoint.y()) colIncr = 1;
       else if(colIdx > startPoint.y()) colIncr = -1;
-
-      rowIdx = maxPoint->x() - 1;
+      
+      rowIdx = maxPoint->x() - 1; // For normal 270
+      rowIncr = -1;               // For normal 270
+      if(gradientNormal == 90){
+        rowIdx = maxPoint->x() + 1;
+        rowIncr = 1;
+      }
+      
       colIdx += colIncr;
       
       for(int i = 0; i < iterations; ++i){
         hysteresisImage->setPixel(rowIdx, colIdx, edgeColor);
         iter = newPath.insert(iter, QPoint(rowIdx, colIdx));
-        --rowIdx;
+        rowIdx += rowIncr;
         if(colIdx != startPoint.y()) colIdx += colIncr;
       }
       break;
     }
+    // case 90:{
+      // if(!isPointMarked((*maxPoint))){
+        // newPath.append(QPoint(maxPoint->x(), maxPoint->y()));
+        // hysteresisImage->setPixel(maxPoint->x(), maxPoint->y(), edgeColor);
+      // }
+      
+      // iter = newPath.end();
+      // iterations = maxPoint->x() - startPoint.x() - 1;
+      
+      // if(colIdx < startPoint.y()) colIncr = 1;
+      // else if(colIdx > startPoint.y()) colIncr = -1;
+
+      // rowIdx = maxPoint->x() + 1; //CAMBIO CON RESPECTO DE 270
+      // colIdx += colIncr;
+      
+      // for(int i = 0; i < iterations; ++i){
+        // hysteresisImage->setPixel(rowIdx, colIdx, edgeColor);
+        // iter = newPath.insert(iter, QPoint(rowIdx, colIdx));
+        // ++rowIdx; //CAMBIO CON RESPECTO DE 270
+        // if(colIdx != startPoint.y()) colIdx += colIncr;
+      // }
+      // break;
+    // }
     default:{
       break;
     }
@@ -530,15 +677,15 @@ void SobelFilter::neighborCheckPoint(const QPoint & currentNeighborPoint,
 {
   int normal = calculateNormal(gradientAngles->getAt(currentNeighborPoint.x(), currentNeighborPoint.y()));
   int magnitude = nonMaximalMagnitudes->getAt(currentNeighborPoint.x(), currentNeighborPoint.y());
-  cout << "normal: " << normal << ", magnitude: " << magnitude<< "  cumple? ";
+  // /*1*/cout << "normal: " << normal << ", magnitude: " << magnitude<< "  cumple? ";
   if(normal == gradientNormal && magnitude >= lowThreshold){
-    cout << " SI "<<endl;
+    // /*1*/cout << " SI "<<endl;
     if(magnitude > maxMagnitude && !isPointMarked(currentNeighborPoint)){
-      cout<< "\t\t\t\t\t\tmaxMagnitude: " << maxMagnitude;
+      // /*1*/cout<< "\t\t\t\t\t\tmaxMagnitude: " << maxMagnitude;
       maxMagnitude = magnitude;
-      cout<< "  entonces ahora maxMagnitude: "<< maxMagnitude;
+      // /*1*/cout<< "  entonces ahora maxMagnitude: "<< maxMagnitude;
       maxPoint = new QPoint(currentNeighborPoint.x(), currentNeighborPoint.y());
-      cout << ",  maxpoint: (" << maxPoint->x() << "," << maxPoint->y() << ")" << endl;
+      // /*1*/cout << ",  maxpoint: (" << maxPoint->x() << "," << maxPoint->y() << ")" << endl;
     }
   }
 }
@@ -555,53 +702,54 @@ QLinkedList<QPoint> SobelFilter::followThisEdge(const int & row,
 	int colEnd = 0;                      //        m          m -> edge point
   int rowIncr = 0;                     //  o x - - - x o    - -> depth one
   int colIncr = 0;                     //  o x x x x x o    x -> depth two
-  int rowIdx = 0;                      //  o o o o o o o    o -> depth tree
+  // int rowIdx = 0;                      //  o o o o o o o    o -> depth tree
   int colIdx = 0;
   
   QLinkedList<QPoint> newPath = QLinkedList<QPoint>();
   
 	switch (gradientNormal) {
-    case 270:{
-        cout << "\t\tfollowthisEdge"<<"(" << row << "," << col << ")" << endl;
-        followEdge270(QPoint(row,col), newPath);
+  case 270: case 90: {
+        // /*1*/cout << "\t\tfollowthisEdge"<<"(" << row << "," << col << ")" << endl;
+        // followEdge270(QPoint(row,col), newPath);
+        followEdgeVertical(gradientNormal, QPoint(row,col), newPath);
         break;
     }
-    case 90: {
-      for(int depth = 1; depth <= MAX_DEPTH; ++depth){
+    // case 90: {
+      // for(int depth = 1; depth <= MAX_DEPTH; ++depth){
        
-        // tour of sides points              
-        if (depth > 1) {                     
-          rowStart = row - 1;                
-          rowEnd = row - depth;              
-          colStart = col - depth;            
-          colIncr = depth * 2;               
-          colEnd = colStart + colIncr;       
-          for(int rowIdx = rowStart; rowIdx > rowEnd; --rowIdx){
-            for(int colIdx = colStart; colIdx <= colEnd; colIdx += colIncr){
-              // neighborCheckPoint(QPoint(rowIdx, colIdx), gradientNormal, depth, newPath);
+        // // tour of sides points              
+        // if (depth > 1) {                     
+          // rowStart = row - 1;                
+          // rowEnd = row - depth;              
+          // colStart = col - depth;            
+          // colIncr = depth * 2;               
+          // colEnd = colStart + colIncr;       
+          // for(int rowIdx = rowStart; rowIdx > rowEnd; --rowIdx){
+            // for(int colIdx = colStart; colIdx <= colEnd; colIdx += colIncr){
+              // // neighborCheckPoint(QPoint(rowIdx, colIdx), gradientNormal, depth, newPath);
               
-            }
-          }
-        }
+            // }
+          // }
+        // }
         
-        // tour of row points                
-        iterations = (depth * 2) + 1;        
-        rowStart = row - depth;              
-        colStart = col - depth;              
-        colEnd = colStart + iterations;      
-        colIncr = 1;
-        rowIncr = 0;
-        rowIdx = rowStart;
+        // // tour of row points                
+        // iterations = (depth * 2) + 1;        
+        // rowStart = row - depth;              
+        // colStart = col - depth;              
+        // colEnd = colStart + iterations;      
+        // colIncr = 1;
+        // rowIncr = 0;
+        // rowIdx = rowStart;
         
-        for(int colIdx = colStart; colIdx < colEnd; colIdx += colIncr){
-          // neighborCheckPoint(rowIdx, colIdx, gradientNormal, depth, newPath);
-        }
+        // for(int colIdx = colStart; colIdx < colEnd; colIdx += colIncr){
+          // // neighborCheckPoint(rowIdx, colIdx, gradientNormal, depth, newPath);
+        // }
         
-        // LINK POINTS ??
+        // // LINK POINTS ??
         
-      }
-      break;
-    }
+      // }
+      // break;
+    // }
     case 360: {
       for(int depth = 1; depth <= MAX_DEPTH; ++depth){
         // tour of sides points              //  Search Range
