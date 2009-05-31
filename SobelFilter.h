@@ -6,6 +6,7 @@
 #include <fstream>
 #include <QPoint>
 #include <QVector>
+#include <QLinkedList>
 #include "Image.h"
 #include "ConvolutionOperation.h"
 #include "utils/Matrix.h"
@@ -22,6 +23,7 @@ class SobelFilter {
     int highThreshold;
 		int edgeColor;
 		int backgroundColor;
+    
 		Matrix<double> * verticalMask;
 		Matrix<double> * horizontalMask;
 		
@@ -32,11 +34,12 @@ class SobelFilter {
 		Matrix<int> * nonMaximalMagnitudes;
 		Matrix<int> * nonMaximalAngles;
 		Matrix<int> * hysteresisMagnitudes;
-    QVector< QVector<QPoint> > * edgePaths;
+    QVector< QLinkedList<QPoint> > * edgePaths;
 		
 		Image * sobelImage;
 		Image * nonMaximalImage;
 		Image * hysteresisImage;
+    
 		
 		void createMasks();
 		void initMatrices(Image * image);
@@ -55,23 +58,26 @@ class SobelFilter {
     int calculateNormal(const int & angle);
     void verifyThisPoint(const int & row, 
                          const int & col, 
-                         const int & gradientNormal,
-                         QVector<QPoint> & currentPath);
-    void followThisEdge(const int & row, 
-                        const int & col,
-                        const int & gradientNormal,
-                        QVector<QPoint> & currentPath);
-    void SobelFilter::findNeighboringEdgePoint(const int & row, 
-                                               const int & col, 
-                                               const int & gradientNormal,
-                                               const int & depth,
-                                               QVector<QPoint> & currentPath,
-                                               QVector<bool> & edgePointsFound);
+                         const int & gradientNormal);
+    QLinkedList<QPoint> followThisEdge(const int & row, 
+                                   const int & col, 
+                                   const int & gradientNormal);
+    
+    void followEdge270(const QPoint & currentPoint, QLinkedList<QPoint> & currentPath);
+    
+    void neighborCheckPoint(const QPoint & currentNeighborPoint, 
+                            const int & gradientNormal,
+                            int & maxMagnitude,
+                            QPoint * & maxPoint);
+    
+    void linkPoints(const QPoint & startPoint,
+                    QPoint * maxPoint,
+                    QLinkedList<QPoint> & newPath,
+                    const int & gradientNormal);
 		
+    bool isPointMarked(const QPoint & currentPoint);
     
-    
-    
-    public:
+  public:
     /**
     *  Constructor de clase
     */
@@ -82,7 +88,10 @@ class SobelFilter {
 		virtual ~SobelFilter();
     
     static const int MAX_DEPTH;
-		
+    static const int LOW_LIMIT_ROW;
+    static const int LOW_LIMIT_COL;
+		static const int HIGH_LIMIT_ROW;
+    static const int HIGH_LIMIT_COL;
     
     /**
      * Ejecuta el filtro sobre la imagen image.  Retorna un objeto Image, el cual es una imagen

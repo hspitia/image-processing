@@ -1,12 +1,15 @@
-#include <cmath>
-#include "utils/Array.h"
-#include "utils/Matrix.h"
 #include "Histogram.h"
 #include "Image.h"
-#include "Segmentation.h"
 #include "LowPassFilters.h"
+#include "Segmentation.h"
 #include "SobelFilter.h"
+#include "utils/Array.h"
+#include "utils/Matrix.h"
+#include <QLinkedList>
+#include <QString>
 #include <QVector>
+#include <cmath>
+#include <iostream>
 
 double gauss(int x, int y);
 
@@ -16,7 +19,7 @@ int main( int argc, char * argv[] )
 	// Ejemplo de la utilizacion de la clase SobelFilter:
 	
   // creacion del ojeto
-	SobelFilter sobel = SobelFilter(20,185);
+	SobelFilter sobel = SobelFilter(3,50);
 	// Imagen original
   Image * img = new Image(argv[1]);
   // Aplicación filtro a la imagen
@@ -51,14 +54,33 @@ int main( int argc, char * argv[] )
   
   // Se guarda en disco un archivo texto con la matriz de Angulos
   // Cualquier matriz se puede gauradar en disco
-  sobel.getGradientAngles()->save("data/matrix.txt");
+  sobel.getGradientAngles()->save("data/gadientAnglesMatrix.txt");
+  sobel.getNonMaximalMagnitudes()->save("data/nonMaximalMagnitudes.txt");
   
+  sobel.saveEdgePaths("data/paths.txt");
+  
+  /*
+  QLinkedList<int> list = QLinkedList<int>();
+  list << 1 << 2 << 3 << 4;
+  
+  QLinkedList<int>::iterator i;
+  for (i = list.begin(); i != list.end(); ++i){
+     cout << *i <<" ";
+  }
+  cout << endl;
+  
+  QLinkedList<int>::iterator iter;
+  iter = list.end();
+  
+  for(int i = 11; i > 4; --i){
+    iter = list.insert(iter, i);
+  }
+  
+  for (i = list.begin(); i != list.end(); ++i){
+     cout << *i <<" ";
+  }
+  cout<< endl;
+  */
 	return 0;//status
 }
 
-double gauss(int x, int y)
-{
-		double sigma = 1.0;
-		double sigma2 = 2 * pow(sigma,2); 
-		return (1/(sigma2*3.1416)) * exp(((-1)*((pow((double)x,2)+pow((double)y,2))))/sigma2);
-}

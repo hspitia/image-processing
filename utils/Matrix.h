@@ -85,8 +85,16 @@ class Matrix
 		
 		
     T getAt(const int & row, const int & col){
-			require(row >= 0 && row < rows, "ERROR - Matrix::getAt(): row index out of bounds");
-			require(col >= 0 && col < cols, "ERROR - Matrix::getAt(): col index out of bounds");
+      if(row < 0 || row >= rows) {
+        cerr<<" ERROR - Matrix::getAt(): row index out of bounds ["<< row<<"]["<< col<<"] in ["<< rows-1 <<"]["<< cols-1 <<"]"<<endl;
+        assert(false);
+      }
+      if(col < 0 || col >= cols) {
+        cerr<<" ERROR - Matrix::getAt(): col index out of bounds ["<< row<<"]["<< col<<"] in ["<< rows-1 <<"]["<< cols-1 <<"]"<<endl;
+        assert(false);
+      }
+			// require(row >= 0 && row < rows, "ERROR - Matrix::getAt(): row index out of bounds");
+			// require(col >= 0 && col < cols, "ERROR - Matrix::getAt(): col index out of bounds");
 			return matrix[row][col];
 		}
 		
