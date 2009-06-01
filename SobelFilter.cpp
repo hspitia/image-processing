@@ -4,6 +4,7 @@
 
 SobelFilter::SobelFilter(const int & lowThreshold, 
                          const int & highThreshold,
+                         const bool & preprocess,
                          const int & maxDepth,
                          const int & edgeColor, 
                          const int & backgroundColor){
@@ -12,6 +13,7 @@ SobelFilter::SobelFilter(const int & lowThreshold,
   
   this->lowThreshold = lowThreshold;
   this->highThreshold = highThreshold;
+  this->preprocess = preprocess;
   this->maxDepth = maxDepth;
 	this->edgeColor = edgeColor;
 	this->backgroundColor = backgroundColor;
@@ -78,11 +80,18 @@ SobelFilter::~SobelFilter(){
   
 }
 
-Image SobelFilter::sobel(Image * originImage, const int & threshold){
+Image SobelFilter::sobel(Image * originImage, const int & threshold, const int & preprocessFilterBoxSize){
 	
-  LowPassFiltering * meanFilter = new LowPassFiltering(3); 
-  Image * image = meanFilter->meanFiltering(originImage);
-	sobelImage = new Image(*image);
+  Image * image = NULL;
+  if(originImage->getFormat() == Image::P3) image = originImage->toGray();
+  else if(originImage->getFormat() == Image::P2) image = new Image(*originImage);
+  
+  if(preprocess){
+    LowPassFiltering * medianFilter = new LowPassFiltering(preprocessFilterBoxSize);
+    image = medianFilter->medianFiltering(image);
+  }
+	
+  sobelImage = new Image(*image);
 	createMasks();
 	initMatrices(image);
 	
@@ -495,7 +504,7 @@ void SobelFilter::followEdgeHorizontal(const int & normalGradient, const QPoint 
   int highLimitCol = nonMaximalMagnitudes->getCols() - 1 - maxDepth;
   
   QPoint currentPoint = QPoint(startPoint.x(), startPoint.y());
-  /*0*/cout << "\t\t\tfollowEdgeHorizontal: "<< normalGradient <<" (" << startPoint.x() << "," << startPoint.y() << ")" << endl;
+  // /*0*/cout << "\t\t\tfollowEdgeHorizontal: "<< normalGradient <<" (" << startPoint.x() << "," << startPoint.y() << ")" << endl;
   while( !stop ){
     QPoint * maxPoint = NULL;
     
@@ -845,7 +854,7 @@ void SobelFilter::saveEdgePaths(const char * fileName){
   if(edgePaths != NULL){
     if(!edgePaths->isEmpty()){
       for(int i = 0; i < edgePaths->size(); i++ ){
-        outputFile<<"Path "<<i<<endl;
+        outputFile<<"Path "<< (i+1) <<endl;
         currentPath = edgePaths->at(i);
         for(it = currentPath.begin(); it != currentPath.end(); ++it)
           outputFile<< " (" << (*it).x() << ", " << (*it).y() <<")";

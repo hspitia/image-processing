@@ -22,6 +22,7 @@ class SobelFilter {
 	private:
     int lowThreshold;
     int highThreshold;
+    bool preprocess;
     int maxDepth;
 		int edgeColor;
 		int backgroundColor;
@@ -92,6 +93,7 @@ class SobelFilter {
     */
  		SobelFilter(const int & lowThreshold, 
                 const int & highThreshold,
+                const bool & preprocess = true,
                 const int & maxDepth = 1,
                 const int & edgeColor = 255,
                 const int & backgroundColor = 0);
@@ -103,7 +105,9 @@ class SobelFilter {
      * Ejecuta el filtro sobre la imagen image.  Retorna un objeto Image, el cual es una imagen
      * binarizada de acuerdo al umbral threshold
      */
-		Image sobel(Image * image, const int & threshold);
+		Image sobel(Image * originImage, 
+                const int & threshold,
+                const int & preprocessFilterBoxSize = 3);
     
     /**
      *  MEtodos de acceso a miebros privados de la clase

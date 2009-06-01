@@ -30,7 +30,8 @@ class Image
 		
 		virtual bool load(const QString & fileName);
 		virtual bool save(const QString & fileName, format_t formatValue=Image::SAME);
-		
+		virtual Image * toGray();
+				
 		virtual int getFormat();
 		virtual QString formatToString(format_t);
 		
@@ -38,7 +39,7 @@ class Image
 		virtual void setPixel(const int & x, const int & y, const int & red, const int & green, const int & blue);
 		
 		virtual int getPixel(const int & x, const int & y);
-		virtual void getPixel(const int & x, const int & y, int & red, int & gree, int & blue);
+		virtual void getPixel(const int & x, const int & y, int & green, int & red, int & blue);
 		
 		virtual int getRows();
 		virtual int getCols();

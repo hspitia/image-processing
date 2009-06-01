@@ -165,7 +165,7 @@ bool Image::parseHeader(QTextStream & in)
 bool Image::save(const QString & fileName, format_t formatValue)
 {
 	if(matrix == NULL){
-		cout<<"Image::save. Error al save la imagen.  No se ha cargado ningun file.";
+		cout<<"Image::save. Error al guardar la imagen.  No se ha cargado ningun archivo.";
 		return false;
 	}
 	
@@ -186,6 +186,32 @@ bool Image::save(const QString & fileName, format_t formatValue)
 	return true;
 }
 
+Image * Image::toGray()
+{
+  Image * grayImage = NULL;
+  
+  if(format == P2) {
+    grayImage = new Image((*this));
+  }
+  
+  else if(format == P3){
+    grayImage = new Image(width, height, P2, 255, 0);
+    int grayPixel = 0;
+    // int k = 0;
+		for(int i = 0; i < rows; i++ ){
+      // k = 0;
+			for(int j = 0; j < cols; j+=3 ){
+				
+				grayPixel = (int)(	(0.299*lut.at(matrix->getAt(i,j))) + 
+													(0.587*lut.at(matrix->getAt(i,j+1))) + 
+													(0.114*lut.at(matrix->getAt(i,j+2))));
+				grayImage->setPixel(i, ((int)j/3), grayPixel);
+        // ++k;
+			}
+		}
+  }
+  return grayImage;
+}
 
 void Image::writeData(QTextStream & out, format_t formatValue)
 {
@@ -289,7 +315,7 @@ int Image::getPixel(const int & x, const int & y)
 
 }
 
-void Image::getPixel(const int & x, const int & y, int & red, int & green, int & blue)
+void Image::getPixel(const int & x, const int & y, int & green, int & red, int & blue)
 {
 	if ( ((x < 0) || (x > rows)) || (((y < 0) || (y > cols))) )	{
 		cerr<<" Image::getPixel:: IndexOutOfBounds ["<< x<<"]["<< y<<"] in ["<<rows<<"]["<<cols<<"]"<<endl;

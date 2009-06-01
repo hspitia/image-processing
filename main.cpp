@@ -20,7 +20,7 @@ int main( int argc, char * argv[] )
 	
   // creacion del ojeto
 	// SobelFilter sobel = SobelFilter(20,30);
-	SobelFilter sobel = SobelFilter(QString(argv[2]).toInt(),QString(argv[3]).toInt());
+	SobelFilter sobel = SobelFilter(QString(argv[2]).toInt(),QString(argv[3]).toInt(), false);
 	// Imagen original
   Image * img = new Image(argv[1]);
   // Aplicación filtro a la imagen
@@ -62,6 +62,11 @@ int main( int argc, char * argv[] )
   
   sobel.saveEdgePaths("data/paths.txt");
   
+  
+ /* Image * colorImage = new Image(argv[1]);
+  Image * grayImage = colorImage->toGray();
+  grayImage->save("data/13_grayImage.pgm");
+  */
 	return 0;//status
 }
 
