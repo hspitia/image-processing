@@ -19,7 +19,8 @@ int main( int argc, char * argv[] )
 	// Ejemplo de la utilizacion de la clase SobelFilter:
 	
   // creacion del ojeto
-	SobelFilter sobel = SobelFilter(3,50);
+	// SobelFilter sobel = SobelFilter(20,30);
+	SobelFilter sobel = SobelFilter(QString(argv[2]).toInt(),QString(argv[3]).toInt());
 	// Imagen original
   Image * img = new Image(argv[1]);
   // Aplicación filtro a la imagen

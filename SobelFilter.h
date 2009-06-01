@@ -63,10 +63,15 @@ class SobelFilter {
                                    const int & col, 
                                    const int & gradientNormal);
     
-    void followEdge270(const QPoint & currentPoint, QLinkedList<QPoint> & currentPath);
-    void followEdge90(const QPoint & currentPoint, QLinkedList<QPoint> & currentPath);
-    void followEdgeVertical(const int & normalGradient, const QPoint & currentPoint, QLinkedList<QPoint> & currentPath);
-    
+    void followEdgeVertical(const int & normalGradient,
+                            const QPoint & currentPoint,
+                            QLinkedList<QPoint> & currentPath);
+    void followEdgeHorizontal(const int & normalGradient,
+                              const QPoint & startPoint,
+                              QLinkedList<QPoint> & newPath);
+    void followEdgeDiagonal(const int & normalGradient,
+                            const QPoint & startPoint,
+                            QLinkedList<QPoint> & newPath);  
     void neighborCheckPoint(const QPoint & currentNeighborPoint, 
                             const int & gradientNormal,
                             int & maxMagnitude,
