@@ -62,28 +62,6 @@ int main( int argc, char * argv[] )
   
   sobel.saveEdgePaths("data/paths.txt");
   
-  /*
-  QLinkedList<int> list = QLinkedList<int>();
-  list << 1 << 2 << 3 << 4;
-  
-  QLinkedList<int>::iterator i;
-  for (i = list.begin(); i != list.end(); ++i){
-     cout << *i <<" ";
-  }
-  cout << endl;
-  
-  QLinkedList<int>::iterator iter;
-  iter = list.end();
-  
-  for(int i = 11; i > 4; --i){
-    iter = list.insert(iter, i);
-  }
-  
-  for (i = list.begin(); i != list.end(); ++i){
-     cout << *i <<" ";
-  }
-  cout<< endl;
-  */
 	return 0;//status
 }
 

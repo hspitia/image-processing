@@ -1,16 +1,17 @@
 #ifndef SOBELFILTER_H
 #define SOBELFILTER_H
 
-#include <iostream>
-#include <cmath>
-#include <fstream>
-#include <QPoint>
-#include <QVector>
-#include <QLinkedList>
-#include "Image.h"
 #include "ConvolutionOperation.h"
+#include "Image.h"
+#include "LowPassFiltering.h"
 #include "utils/Matrix.h"
 #include "utils/utils.h"
+#include <QLinkedList>
+#include <QPoint>
+#include <QVector>
+#include <cmath>
+#include <fstream>
+#include <iostream>
 
 using namespace std;
 
@@ -21,6 +22,7 @@ class SobelFilter {
 	private:
     int lowThreshold;
     int highThreshold;
+    int maxDepth;
 		int edgeColor;
 		int backgroundColor;
     
@@ -90,15 +92,12 @@ class SobelFilter {
     */
  		SobelFilter(const int & lowThreshold, 
                 const int & highThreshold,
+                const int & maxDepth = 1,
                 const int & edgeColor = 255,
                 const int & backgroundColor = 0);
 		virtual ~SobelFilter();
     
-    static const int MAX_DEPTH;
-    static const int LOW_LIMIT_ROW;
-    static const int LOW_LIMIT_COL;
-		static const int HIGH_LIMIT_ROW;
-    static const int HIGH_LIMIT_COL;
+    // static const int MAX_DEPTH;
     
     /**
      * Ejecuta el filtro sobre la imagen image.  Retorna un objeto Image, el cual es una imagen
@@ -119,6 +118,7 @@ class SobelFilter {
 		Matrix<int> * getGradientAngles();  // Matriz de Angulos
 		Matrix<int> * getNonMaximalMagnitudes();
 		Matrix<int> * getNonMaximalAngles();
+    QVector< QLinkedList<QPoint> > * getEdgePaths();
     
 		void setVerticalMask(Matrix<double> * verticalMaskValue);
 		void setHorizontalMask(Matrix<double> * horizontalMaskValue);
@@ -144,7 +144,7 @@ class SobelFilter {
 		Image * createAnglesColorImage(process_stage_t processStageForImage);
     
     /**
-     *  Guarda en else el archivo fielName los puntos de cada camino trazado
+     *  Guarda en el archivo fileName los puntos de cada camino trazado
      *  al seguir los bordes
      */
     void saveEdgePaths(const char * fileName);

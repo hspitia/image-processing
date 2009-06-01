@@ -1,13 +1,18 @@
 #include "SobelFilter.h"
 
-const int SobelFilter::MAX_DEPTH = 1;
+// const int SobelFilter::MAX_DEPTH = 1;
 
-SobelFilter::SobelFilter(const int & lowThreshold, const int & highThreshold, const int & edgeColor, const int & backgroundColor){
+SobelFilter::SobelFilter(const int & lowThreshold, 
+                         const int & highThreshold,
+                         const int & maxDepth,
+                         const int & edgeColor, 
+                         const int & backgroundColor){
 	// createMasks();
   
   
   this->lowThreshold = lowThreshold;
   this->highThreshold = highThreshold;
+  this->maxDepth = maxDepth;
 	this->edgeColor = edgeColor;
 	this->backgroundColor = backgroundColor;
 	
@@ -73,8 +78,10 @@ SobelFilter::~SobelFilter(){
   
 }
 
-Image SobelFilter::sobel(Image * image, const int & threshold){
+Image SobelFilter::sobel(Image * originImage, const int & threshold){
 	
+  LowPassFiltering * meanFilter = new LowPassFiltering(3); 
+  Image * image = meanFilter->meanFiltering(originImage);
 	sobelImage = new Image(*image);
 	createMasks();
 	initMatrices(image);
@@ -331,13 +338,13 @@ void SobelFilter::hysteresis(){
 void SobelFilter::checkForEdgePoints(const int & gradientNormal){
   
 	int rowStart = 0;
-	int colStart = MAX_DEPTH;
+	int colStart = maxDepth;
 	int rowEnd = 0;
 	int colEnd = 0;
 	
 	if(gradientNormal == 270 || gradientNormal == 315){
-		rowEnd = nonMaximalMagnitudes->getRows() - MAX_DEPTH;
-		colEnd = nonMaximalMagnitudes->getCols() - MAX_DEPTH;
+		rowEnd = nonMaximalMagnitudes->getRows() - maxDepth;
+		colEnd = nonMaximalMagnitudes->getCols() - maxDepth;
     
     for(int rowIdx = rowStart; rowIdx < rowEnd; ++rowIdx){
       for(int colIdx = colStart; colIdx < colEnd; ++colIdx){
@@ -347,10 +354,10 @@ void SobelFilter::checkForEdgePoints(const int & gradientNormal){
   }
 
 	else if(gradientNormal == 90 || gradientNormal == 135){
-	  rowStart = nonMaximalMagnitudes->getRows() - 1 - MAX_DEPTH;
+	  rowStart = nonMaximalMagnitudes->getRows() - 1 - maxDepth;
     colStart = nonMaximalMagnitudes->getCols() - 1;
-    rowEnd = MAX_DEPTH;
-    colEnd = MAX_DEPTH;
+    rowEnd = maxDepth;
+    colEnd = maxDepth;
     
     for(int rowIdx = rowStart; rowIdx >= rowEnd; --rowIdx){
       for(int colIdx = colStart; colIdx >= colEnd; --colIdx){
@@ -359,10 +366,10 @@ void SobelFilter::checkForEdgePoints(const int & gradientNormal){
     }
 	}
   else if(gradientNormal == 360 || gradientNormal == 45){
-	  rowStart = nonMaximalMagnitudes->getRows() - 1 - MAX_DEPTH;
+	  rowStart = nonMaximalMagnitudes->getRows() - 1 - maxDepth;
     colStart = 0;
-    rowEnd = MAX_DEPTH;
-    colEnd = nonMaximalMagnitudes->getCols() - MAX_DEPTH;
+    rowEnd = maxDepth;
+    colEnd = nonMaximalMagnitudes->getCols() - maxDepth;
     for(int colIdx = colStart; colIdx < colEnd; ++colIdx){
       for(int rowIdx = rowStart; rowIdx >= rowEnd; --rowIdx){
         verifyThisPoint(rowIdx, colIdx, gradientNormal);
@@ -371,9 +378,9 @@ void SobelFilter::checkForEdgePoints(const int & gradientNormal){
 	}
   else if(gradientNormal == 180 || gradientNormal == 225){
 	  rowStart = 0;
-    colStart = nonMaximalMagnitudes->getCols() - 1 - MAX_DEPTH;
-    rowEnd = nonMaximalMagnitudes->getRows() - MAX_DEPTH;
-    colEnd = MAX_DEPTH;
+    colStart = nonMaximalMagnitudes->getCols() - 1 - maxDepth;
+    rowEnd = nonMaximalMagnitudes->getRows() - maxDepth;
+    colEnd = maxDepth;
     
     for(int colIdx = colStart; colIdx >= colEnd; --colIdx){
       for(int rowIdx = rowStart; rowIdx < rowEnd; ++rowIdx){
@@ -416,17 +423,17 @@ void SobelFilter::followEdgeVertical(const int & normalGradient, const QPoint & 
   int rowIdx = 0;
   int maxMagnitude = 0;
   bool stop = false;
-  int lowLimitRow = MAX_DEPTH;
-  int lowLimitCol = MAX_DEPTH;
-  int highLimitRow = nonMaximalMagnitudes->getRows() - 1 - MAX_DEPTH;
-  int highLimitCol = nonMaximalMagnitudes->getCols() - 1 - MAX_DEPTH;
+  int lowLimitRow = maxDepth;
+  int lowLimitCol = maxDepth;
+  int highLimitRow = nonMaximalMagnitudes->getRows() - 1 - maxDepth;
+  int highLimitCol = nonMaximalMagnitudes->getCols() - 1 - maxDepth;
   
   QPoint currentPoint = QPoint(startPoint.x(), startPoint.y());
-  /*0*/cout << "\t\t\tfollowEdgeVertical: "<< normalGradient <<" (" << startPoint.x() << "," << startPoint.y() << ")" << endl;
+  // /*0*/cout << "\t\t\tfollowEdgeVertical: "<< normalGradient <<" (" << startPoint.x() << "," << startPoint.y() << ")" << endl;
   while( !stop ){
     QPoint * maxPoint = NULL;
     
-    for(int depth = 1; depth <= MAX_DEPTH; ++depth){
+    for(int depth = 1; depth <= maxDepth; ++depth){
       // /*1*/cout << "\t\t\t\tDepth: " << depth << endl;
       
       /**/
@@ -482,17 +489,17 @@ void SobelFilter::followEdgeHorizontal(const int & normalGradient, const QPoint 
   int colIdx = 0;
   int maxMagnitude = 0;
   bool stop = false;
-  int lowLimitRow = MAX_DEPTH;
-  int lowLimitCol = MAX_DEPTH;
-  int highLimitRow = nonMaximalMagnitudes->getRows() - 1 - MAX_DEPTH;
-  int highLimitCol = nonMaximalMagnitudes->getCols() - 1 - MAX_DEPTH;
+  int lowLimitRow = maxDepth;
+  int lowLimitCol = maxDepth;
+  int highLimitRow = nonMaximalMagnitudes->getRows() - 1 - maxDepth;
+  int highLimitCol = nonMaximalMagnitudes->getCols() - 1 - maxDepth;
   
   QPoint currentPoint = QPoint(startPoint.x(), startPoint.y());
   /*0*/cout << "\t\t\tfollowEdgeHorizontal: "<< normalGradient <<" (" << startPoint.x() << "," << startPoint.y() << ")" << endl;
   while( !stop ){
     QPoint * maxPoint = NULL;
     
-    for(int depth = 1; depth <= MAX_DEPTH; ++depth){
+    for(int depth = 1; depth <= maxDepth; ++depth){
       // /*2/cout << "\t\t\t\tDepth: " << depth << endl;
       
       /**/
@@ -551,17 +558,17 @@ void SobelFilter::followEdgeDiagonal(const int & normalGradient, const QPoint & 
   int maxMagnitude = 0;
   // int colIdx = 0;
   bool stop = false;
-  int lowLimitRow = MAX_DEPTH;
-  int lowLimitCol = MAX_DEPTH;
-  int highLimitRow = nonMaximalMagnitudes->getRows() - 1 - MAX_DEPTH;
-  int highLimitCol = nonMaximalMagnitudes->getCols() - 1 - MAX_DEPTH;
+  int lowLimitRow = maxDepth;
+  int lowLimitCol = maxDepth;
+  int highLimitRow = nonMaximalMagnitudes->getRows() - 1 - maxDepth;
+  int highLimitCol = nonMaximalMagnitudes->getCols() - 1 - maxDepth;
   
   QPoint currentPoint = QPoint(startPoint.x(), startPoint.y());
   /*0*/cout << "\t\t\tfollowEdgeDiagonal: "<< normalGradient <<" (" << startPoint.x() << "," << startPoint.y() << ")" << endl;
   while( !stop ){
     QPoint * maxPoint = NULL;
     
-    for(int depth = 1; depth <= MAX_DEPTH; ++depth){
+    for(int depth = 1; depth <= maxDepth; ++depth){
       // /*2/cout << "\t\t\t\tDepth: " << depth << endl;
       
       /**/
@@ -951,4 +958,8 @@ Image * SobelFilter::getNonMaximalImage()
 Image * SobelFilter::getHysteresisImage()
 {
   return hysteresisImage;
+}
+
+QVector< QLinkedList<QPoint> > * SobelFilter::getEdgePaths(){
+  return edgePaths;
 }
